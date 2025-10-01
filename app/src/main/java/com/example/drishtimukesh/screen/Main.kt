@@ -126,14 +126,14 @@ fun HomeCheckScreen(navController: NavHostController) {
 @Composable
 fun HomeScreenContainer(navController: NavHostController) {
     var selectedItem by remember { mutableStateOf<BottomNavItem>(BottomNavItem.Home) }
-
+    val bottomNavController = rememberNavController()
     Scaffold(
         bottomBar = {
             CustomBottomNavigation(
                 selectedItem = selectedItem,
                 onItemSelected = { item ->
                     selectedItem = item
-                    navController.navigate(item.route) {
+                    bottomNavController.navigate(item.route) {
                         popUpTo(Screen.Home.route) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
@@ -143,7 +143,7 @@ fun HomeScreenContainer(navController: NavHostController) {
         }
     ) { innerPadding ->
         NavHost(
-            navController = navController, // ✅ now correct type
+            navController = bottomNavController, // ✅ now correct type
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
