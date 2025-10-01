@@ -515,7 +515,7 @@ fun createAccount(
     val db = FirebaseFirestore.getInstance()
 
     // Check username uniqueness first
-    db.collection("users").whereEqualTo("username", user.userName).get()
+    db.collection("users").whereEqualTo("userName", user.userName).get()
         .addOnSuccessListener { usernameDocs ->
             if (!usernameDocs.isEmpty) {
                 onFailure(Exception("Username already taken"))
