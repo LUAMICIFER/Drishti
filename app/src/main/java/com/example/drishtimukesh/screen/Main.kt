@@ -147,10 +147,10 @@ fun HomeScreenContainer(navController: NavHostController) {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreen() }
-            composable(Screen.Courses.route) { CoursesScreen() }
-            composable(Screen.Dashboard.route) { DashboardScreen() }
-            composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.Home.route) { HomeScreen(navController) }
+            composable(Screen.Courses.route) { CoursesScreen(navController) }
+            composable(Screen.Dashboard.route) { DashboardScreen(navController) }
+            composable(Screen.Profile.route) { ProfileScreen(navController) }
         }
     }
 }

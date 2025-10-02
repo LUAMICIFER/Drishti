@@ -44,3 +44,33 @@ data class Chapter(
     val name: String = "",
     val driveFolderId: String = ""
 )
+
+
+//
+
+//// A Subject document (fetched from /courses/{courseId}/subjects/{subjectId})
+//data class Subject(
+//    val id: String = "",
+//    val name: String = "",
+//    val driveFolderId: String = ""
+//
+//    // NOTE: The 'chapters' list is removed because chapters are fetched from a sub-collection.
+//)
+//
+//// A Chapter document (fetched from .../subjects/{subjectId}/chapters/{chapterId})
+//data class Chapter(
+//    val id: String = "",
+//    val name: String = "",
+//    val driveFolderId: String = ""
+//
+//    // NOTE: The 'lectures' list is removed because lectures should be a sub-collection.
+//)
+//
+//// A Lecture document (MUST BE ADDED for getLecturesByChapterId)
+//data class Lecture(
+//    val id: String = "",
+//    val name: String = "",
+//    val durationMin: Int = 0,
+//    val driveFileId: String = "", // Add a field to hold the specific file/video ID
+//    val isCompleted: Boolean = false // Useful for tracking progress
+//)

@@ -54,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -64,7 +65,7 @@ import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController : NavHostController) {
     BoxWithConstraints(modifier = Modifier
         .background(Color.White)
         .fillMaxSize()) {
