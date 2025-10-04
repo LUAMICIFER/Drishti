@@ -1,6 +1,7 @@
 package com.example.drishtimukesh.screen
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -38,12 +39,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -61,6 +64,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.drishtimukesh.Course
 import com.example.drishtimukesh.R
 import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
+import com.example.drishtimukesh.addFullCourseHierarchy
+import kotlinx.coroutines.launch
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -162,6 +167,39 @@ fun HomeScreen(navController : NavHostController) {
                 oldPrice = "₹ 600/-",
                 onEnrollClick = { /* Handle click */ }
             )
+            //temp
+            val context = LocalContext.current
+
+            // Creates a CoroutineScope that is tied to the lifecycle of this Composable function.
+            // When CourseCreationScreen leaves composition, the scope is cancelled.
+            val scope = rememberCoroutineScope()
+            Button(
+                onClick = {
+                    // Launch the suspend function inside the coroutine scope
+                    scope.launch {
+                        Toast.makeText(context, "Adding course hierarchy...", Toast.LENGTH_SHORT).show()
+
+                        // Call the function defined in DrishtiCourseData.kt
+                        val newCourseId = addFullCourseHierarchy("Class_10")
+
+                        if (newCourseId != null) {
+                            Toast.makeText(
+                                context,
+                                "Course structure created! ID: $newCourseId",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Failed to create course structure. Check Logcat for details.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            ) {
+                Text("Add Sample Class 12 Course")
+            }
 
 
         }

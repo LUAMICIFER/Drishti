@@ -13,9 +13,12 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.drishtimukesh.screen.CourseDetailScreen
 import com.example.drishtimukesh.screen.HomeCheckScreen
 import com.example.drishtimukesh.screen.HomeScreenContainer
 import com.example.drishtimukesh.signup.DetailPage
@@ -145,6 +148,13 @@ class MainActivity : ComponentActivity() {
 
                     composable("home_main") {
                         HomeScreenContainer(navController = navController)
+                    }
+                    composable(
+                        route = "CourseDescriptionScreen/{courseId}",
+                        arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+                        CourseDetailScreen(courseId = courseId, navController = navController)
                     }
                 }
             }

@@ -201,7 +201,8 @@ fun CoursesScreen(navController: NavHostController) {
                 CourseContent(
                     isLoading = isLoading,
                     courses = courses,
-                    selectedClass = selectedClass
+                    selectedClass = selectedClass,
+                    navController =navController
                 )
             }
 
@@ -271,7 +272,7 @@ fun TopBar2() {
     }
 }
 @Composable
-private fun CourseItem(course: Course, onEnrollClick: () -> Unit) { // <-- Added onEnrollClick
+private fun CourseItem(course: Course, onEnrollClick:() -> Unit) { // <-- Added onEnrollClick
         // Helper variables to map course data to the card structure
         val imageUrl = course.baseImage[0]
         val title = course.name
@@ -358,7 +359,9 @@ private fun CourseItem(course: Course, onEnrollClick: () -> Unit) { // <-- Added
                 }
             }
         }
+
 }
+//CourseDesciptionScreen()
 @Composable
 private fun FilterButtonsRow(
     classFilters: List<String>,
@@ -394,7 +397,7 @@ private fun FilterButtonsRow(
 private fun CourseContent(
     isLoading: Boolean,
     courses: List<Course>,
-    selectedClass: String
+    selectedClass: String,navController: NavController
 ) {
     val selectedClassText = if (selectedClass == "all") "All Classes" else selectedClass.replace("_", " ")
 
@@ -420,7 +423,7 @@ private fun CourseContent(
         ) {
             items(courses, key = { it.id }) { course ->
                 CourseItem(course = course, onEnrollClick = {
-
+                    navController.navigate("CourseDescriptionScreen/${course.id}")
                 })
             }
         }
@@ -430,6 +433,6 @@ private fun CourseContent(
 @Preview
 @Composable
 private fun card() {
-    CoursesScreen(rememberNavController())
+//    CoursesScreen(rememberNavController())
 
 }
