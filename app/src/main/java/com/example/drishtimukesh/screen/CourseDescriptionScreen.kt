@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -52,6 +54,8 @@ import com.example.drishtimukesh.getCourseById
 import com.example.drishtimukesh.getSubjectsByCourseId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
@@ -59,6 +63,8 @@ import com.example.drishtimukesh.Chapter
 import com.example.drishtimukesh.Lecture
 import com.example.drishtimukesh.getChaptersBySubjectId
 import com.example.drishtimukesh.getLecturesByChapterId
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -244,7 +250,7 @@ fun CourseDetailScreen(courseId: String, navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                CourseCurriculum(courseId = courseId, subjects = subjects)
+                CourseCurriculum(courseId = courseId, subjects = subjects,navController)
             }
         }
     }
@@ -315,17 +321,17 @@ fun BottomEnrollmentBar(
     }
 }
 @Composable
-fun CourseCurriculum(courseId: String, subjects: List<Subject>) {
+fun CourseCurriculum(courseId: String, subjects: List<Subject>,navController: NavController) {
     Column(modifier = Modifier.fillMaxWidth()) {
         subjects.forEach { subject ->
-            SubjectItem(courseId = courseId, subject = subject)
+            SubjectItem(courseId = courseId, subject = subject, navController)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun SubjectItem(courseId: String, subject: Subject) {
+fun SubjectItem(courseId: String, subject: Subject,navController: NavController) {
     var isExpanded by remember { mutableStateOf(false) }
     var chapters by remember { mutableStateOf<List<Chapter>>(emptyList()) }
 
@@ -357,14 +363,14 @@ fun SubjectItem(courseId: String, subject: Subject) {
     AnimatedVisibility(visible = isExpanded) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             chapters.forEach { chapter ->
-                ChapterItem(courseId, subject.id, chapter)
+                ChapterItem(courseId, subject.id, chapter, navController)
             }
         }
     }
 }
 
 @Composable
-fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter) {
+fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter,navController: NavController) {
     var isExpanded by remember { mutableStateOf(false) }
     var lectures by remember { mutableStateOf<List<Lecture>>(emptyList()) }
 
@@ -397,166 +403,66 @@ fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter) {
     AnimatedVisibility(visible = isExpanded) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             lectures.forEach { lecture ->
-                LectureItem(lecture)
+                LectureItem(lecture,navController)
             }
         }
     }
 }
 
 @Composable
-fun LectureItem(lecture: Lecture) {
+fun LectureItem(lecture: Lecture, navController: NavController) {
+    val uriHandler = LocalUriHandler.current
+
     Row(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(lecture.name)
-        Icon(Icons.Default.CheckCircle, contentDescription = "Lecture", tint = Color.Green)
+        // Lecture Name and Status
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Icon(Icons.Default.CheckCircle, contentDescription = "Lecture Status", tint = Color.Green, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                lecture.name,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        // Actions: PDF and Video
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // PDF Resource Button (Open Link)
+            if (lecture.pdfLink.isNotBlank()) {
+                IconButton(onClick = {
+                    // Open the PDF link in an external browser
+                    uriHandler.openUri(lecture.pdfLink)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Menu, // Icon for documents/PDFs
+                        contentDescription = "View Notes PDF",
+                        tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f) // Softer icon color
+                    )
+                }
+            }
+
+            // Play Video Button (Navigate to player)
+            IconButton(onClick = {
+                // Encode the URL before passing it as a route argument
+                val encodedUrl = URLEncoder.encode(lecture.videoUrl, StandardCharsets.UTF_8.toString())
+                navController.navigate("VideoPlayerScreen/$encodedUrl")
+            }) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow, // Icon for video playback
+                    contentDescription = "Play Video",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
-
-//
-//// --- Curriculum Composables (Subject -> Chapter -> Lecture) ---
-//
-//@Composable
-//fun CourseCurriculum(curriculum: List<Subject>) {
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        curriculum.forEach { subject ->
-//            SubjectItem(subject = subject)
-//            Spacer(modifier = Modifier.height(8.dp))
-//        }
-//    }
-//}
-////
-//@Composable
-//fun SubjectItem(subject: Subject) {
-//    var isExpanded by remember { mutableStateOf(subject.id == "1") } // Expand first subject by default
-//
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable { isExpanded = !isExpanded },
-//        shape = RoundedCornerShape(12.dp),
-//        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), // Light blue background
-//        elevation = CardDefaults.cardElevation(2.dp)
-//    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.SpaceBetween
-//        ) {
-//            Text(
-//                text = subject.name,
-//                style = MaterialTheme.typography.titleMedium.copy(
-//                    fontWeight = FontWeight.SemiBold,
-//                    color = MaterialTheme.colorScheme.primary
-//                )
-//            )
-//            Icon(
-//                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-//                contentDescription = if (isExpanded) "Collapse" else "Expand",
-//                tint = MaterialTheme.colorScheme.primary
-//            )
-//        }
-//    }
-////    var chapters
-//    var chapters by remember { mutableStateOf<List<Subject>>(emptyList()) }
-//    LaunchedEffect(course,subject.id) {
-//        chapters = getSubjectsByCourseId(courseId) // ✅ safe call
-//    }
-//    AnimatedVisibility(visible = isExpanded) {
-//        Column(modifier = Modifier.padding(top = 8.dp, start = 8.dp, end = 8.dp)) {
-//            subject.chapters.forEach { chapter ->
-//                ChapterItem(chapter = chapter)
-//                Spacer(modifier = Modifier.height(4.dp))
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun ChapterItem(chapter: Chapter) {
-//    var isExpanded by remember { mutableStateOf(false) }
-//
-//    // Chapter Header (Looks like a nested card/box in the screenshots)
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable { isExpanded = !isExpanded },
-//        shape = RoundedCornerShape(8.dp),
-//        colors = CardDefaults.cardColors(containerColor = Color.Gray),
-//        elevation = CardDefaults.cardElevation(0.dp) // No elevation for nested cards
-//    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(12.dp),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.SpaceBetween
-//        ) {
-//            Text(
-//                text = chapter.name,
-//                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-//            )
-//            Icon(
-//                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-//                contentDescription = if (isExpanded) "Collapse" else "Expand",
-//                tint = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
-//        }
-//    }
-//
-//    AnimatedVisibility(visible = isExpanded) {
-//        Column(modifier = Modifier.padding(top = 4.dp, start = 12.dp, end = 12.dp)) {
-//            chapter.lectures.forEach { lecture ->
-//                LectureItem(lecture = lecture)
-//                Divider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 8.dp))
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun LectureItem(lecture: Lecture) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable { /* Handle lecture click / start video */ }
-//            .padding(vertical = 12.dp),
-//        verticalAlignment = Alignment.CenterVertically,
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-//        Row(verticalAlignment = Alignment.CenterVertically) {
-//            // Play Icon (Colored when completed, perhaps?)
-//            Icon(
-//                imageVector = Icons.Default.PlayArrow,
-//                contentDescription = "Play Lecture",
-//                tint = MaterialTheme.colorScheme.primary, // Blue play icon
-//                modifier = Modifier.size(24.dp)
-//            )
-//            Spacer(modifier = Modifier.width(12.dp))
-//            Column {
-//                Text(
-//                    text = lecture.name,
-//                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal)
-//                )
-//                Text(
-//                    text = "${lecture.durationMin} min",
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = Color.Gray
-//                )
-//            }
-//        }
-//
-//        // Navigation Arrow / Status Icon
-//        Icon(
-//            imageVector = if (lecture.isCompleted) Icons.Default.CheckCircle else Icons.Default.KeyboardArrowRight,
-//            contentDescription = "View lecture details",
-//            tint = if (lecture.isCompleted) Color.Green.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-//        )
-//    }
-
 @Preview
 @Composable
 private fun hiiiiiii() {

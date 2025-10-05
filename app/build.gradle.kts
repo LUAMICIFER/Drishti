@@ -79,5 +79,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
 
     implementation("io.coil-kt:coil-compose:2.6.0")//online image
+    implementation("androidx.media3:media3-exoplayer:1.3.1")// exoplayer
+    implementation("androidx.media3:media3-ui:1.3.1")
 
 }

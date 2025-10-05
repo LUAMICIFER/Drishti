@@ -149,7 +149,7 @@ fun HomeScreenContainer(navController: NavHostController) {
         ) {
             composable(Screen.Home.route) { HomeScreen(navController) }
             composable(Screen.Courses.route) { CoursesScreen(navController) }
-            composable(Screen.Dashboard.route) { DashboardScreen(navController) }
+            composable(Screen.Dashboard.route) { ContactUsScreen() }
             composable(Screen.Profile.route) { ProfileScreen(navController) }
         }
     }

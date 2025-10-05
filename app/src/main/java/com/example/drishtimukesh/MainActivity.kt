@@ -21,12 +21,15 @@ import androidx.navigation.navArgument
 import com.example.drishtimukesh.screen.CourseDetailScreen
 import com.example.drishtimukesh.screen.HomeCheckScreen
 import com.example.drishtimukesh.screen.HomeScreenContainer
+import com.example.drishtimukesh.screen.VideoPlayerScreen
 import com.example.drishtimukesh.signup.DetailPage
 import com.example.drishtimukesh.signup.OnboardingScreen
 import com.example.drishtimukesh.signup.SignUpScreen
 import com.example.drishtimukesh.signup.saveOnboardingCompleted
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 //class MainActivity : ComponentActivity() {
 //    override fun onCreate(savedInstanceState: Bundle?) {
@@ -155,6 +158,20 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
                         CourseDetailScreen(courseId = courseId, navController = navController)
+                    }
+                    composable("VideoPlayerScreen/{videoUrl}",
+                        arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        // Retrieve the encoded URL argument
+                        val encodedUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
+
+                        // CRUCIAL: Decode the URL before passing it to the composable
+                        val decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
+
+                        VideoPlayerScreen(
+                            videoUrl = decodedUrl,
+                            navController = navController
+                        )
                     }
                 }
             }
