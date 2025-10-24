@@ -179,7 +179,7 @@ fun CourseDetailScreen(courseId: String, navController: NavController) {
         subjects = getSubjectsByCourseId(courseId)
     }
 
-    var isSubscribed by remember { mutableStateOf(true) }
+    var isSubscribed by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -197,7 +197,11 @@ fun CourseDetailScreen(courseId: String, navController: NavController) {
                 course = course,
                 isSubscribed = isSubscribed,
                 onEnrollClick = {
-                    isSubscribed = true
+                    // Navigate to the new payment screen
+                    if (course != null) {
+                        val route = "differentPaymentScreen/${course!!.id}"
+                        navController.navigate(route)
+                    }
                 },
                 onLiveNowClick = {
                     println("Navigate to live player for ${course?.name}")

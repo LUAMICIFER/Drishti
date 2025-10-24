@@ -142,7 +142,7 @@ fun DetailPage(navController: NavController){
                 )
 
         ) {
-            Text(text = "User Details",Modifier.padding(top=48.dp, start = 32.dp,), fontSize = 32.sp)
+            Text(text = "User Details",Modifier.padding(top=48.dp, start = 32.dp), fontSize = 32.sp)
             Text(text = "We are here to help you reach the \npeaks of learning",Modifier.padding(start = 32.dp,top=8.dp), fontSize = 14.sp, color = Color.Gray)
 
             Box()

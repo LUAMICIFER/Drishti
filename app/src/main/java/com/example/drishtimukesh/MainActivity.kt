@@ -21,9 +21,12 @@ import androidx.navigation.navArgument
 import com.example.drishtimukesh.screen.CourseDetailScreen
 import com.example.drishtimukesh.screen.HomeCheckScreen
 import com.example.drishtimukesh.screen.HomeScreenContainer
+import com.example.drishtimukesh.screen.PaymentScreen
+import com.example.drishtimukesh.screen.ReferralScreen
 import com.example.drishtimukesh.screen.VideoPlayerScreen
 import com.example.drishtimukesh.signup.DetailPage
 import com.example.drishtimukesh.signup.OnboardingScreen
+import com.example.drishtimukesh.signup.SignInScreen
 import com.example.drishtimukesh.signup.SignUpScreen
 import com.example.drishtimukesh.signup.saveOnboardingCompleted
 import com.google.firebase.auth.FirebaseAuth
@@ -142,7 +145,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("signin") {
-                        // TODO: add your sign in screen
+                        SignInScreen(navController)
                     }
 
                     composable("home") {
@@ -172,6 +175,18 @@ class MainActivity : ComponentActivity() {
                             videoUrl = decodedUrl,
                             navController = navController
                         )
+                    }
+                    composable("refferal") { ReferralScreen(navController=navController) }
+                    composable(
+                        route = "differentPaymentScreen/{courseId}",
+                        // 1. Define the argument type and name
+                        arguments = listOf(navArgument("courseId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        // 2. Extract the argument value from the backStackEntry
+                        val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+
+                        // 3. Pass the extracted value to your Composable
+                        PaymentScreen(courseId = courseId, navController = navController)
                     }
                 }
             }

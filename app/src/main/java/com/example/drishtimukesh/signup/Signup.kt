@@ -1,6 +1,5 @@
 package com.example.drishtimukesh.signup
 
-import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,12 +23,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,20 +57,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.drishtimukesh.R
-import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
-import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.delay
-import java.util.concurrent.TimeUnit
 
 
 @Composable
@@ -198,12 +189,12 @@ fun SignUpScreen(navController: NavHostController) {
 
                         // Phone Button
                         SignUpOptionButton(
-                            text = "Sign up with Phone",
-                            icon = R.drawable.call, // add phone icon
+                            text = "Sign-in",
+                            icon = R.drawable.profile, // add phone icon
                             backgroundColor = Color(0xFF34A853),
                             contentColor = Color.White
                         ) {
-                            navController.navigate("signup_phone")
+                            navController.navigate("signin")
 //                            AuthFlow()
 
                         }
@@ -297,125 +288,9 @@ fun SignUpOptionButton(
         }
     }
 }
-@Composable
-fun AuthFlow() {
-    var verificationId by remember { mutableStateOf<String?>(null) }
-    var phone by remember { mutableStateOf("") }
-    var isVerified by remember { mutableStateOf(false) }
-
-    when {
-        isVerified -> {
-            Text("✅ Logged in successfully!", modifier = Modifier.fillMaxSize().wrapContentSize())
-        }
-        verificationId == null -> {
-            PhoneNumberScreen { id, number ->
-                verificationId = id
-                phone = number
-            }
-        }
-        else -> {
-            OtpScreen(
-                verificationId = verificationId!!,
-                phone = phone
-            ) {
-                isVerified = true
-            }
-        }
-    }
-}
-
-@Composable
-fun PhoneNumberScreen(onCodeSent: (String, String) -> Unit) {
-    var phoneNumber by remember { mutableStateOf("") }
-    val auth = FirebaseAuth.getInstance()
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        RevolvingDashedOutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Enter phone number") }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                val options = PhoneAuthOptions.newBuilder(auth)
-                    .setPhoneNumber("+91$phoneNumber") // include country code
-                    .setTimeout(60L, TimeUnit.SECONDS)
-                    .setActivity(context as Activity)
-                    .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                            Toast.makeText(context, "Auto Verified!", Toast.LENGTH_SHORT).show()
-                        }
-
-                        override fun onVerificationFailed(e: FirebaseException) {
-                            Toast.makeText(context, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-
-                        override fun onCodeSent(
-                            verificationId: String,
-                            token: PhoneAuthProvider.ForceResendingToken
-                        ) {
-                            onCodeSent(verificationId, phoneNumber)
-                        }
-                    }).build()
-
-                PhoneAuthProvider.verifyPhoneNumber(options)
-            }
-        ) {
-            Text("Send OTP")
-        }
-    }
-}
-
-@Composable
-fun OtpScreen(verificationId: String, phone: String, onSuccess: () -> Unit) {
-    var otpCode by remember { mutableStateOf("") }
-    val auth = FirebaseAuth.getInstance()
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Enter OTP sent to $phone")
-
-        OutlinedTextField(
-            value = otpCode,
-            onValueChange = { otpCode = it },
-            label = { Text("OTP") }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                val credential = PhoneAuthProvider.getCredential(verificationId, otpCode)
-                auth.signInWithCredential(credential)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(context, "Phone Verified!", Toast.LENGTH_SHORT).show()
-                            onSuccess()
-                        } else {
-                            Toast.makeText(context, "Invalid OTP", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-            }
-        ) {
-            Text("Verify")
-        }
-    }
-}
-
-
 @Preview(showBackground = true)
 @Composable
-private fun helllllo() {
+private fun Helllllo() {
     SignUpScreen(rememberNavController())
 //    AuthFlow()
 }

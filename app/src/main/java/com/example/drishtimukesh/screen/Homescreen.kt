@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +59,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
@@ -64,7 +67,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.drishtimukesh.Course
 import com.example.drishtimukesh.R
 import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
+import com.example.drishtimukesh.Topper
 import com.example.drishtimukesh.addFullCourseHierarchy
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -90,7 +95,7 @@ fun HomeScreen(navController : NavHostController) {
 //                .padding(WindowInsets.systemBars.asPaddingValues())
                 .padding(padding).verticalScroll(rememberScrollState())
         ) {
-            TopBar()
+            TopBar(navController)
             var search by remember { mutableStateOf("") }
             Spacer(Modifier.height(24.dp))
             RevolvingDashedOutlinedTextField(
@@ -146,16 +151,23 @@ fun HomeScreen(navController : NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
 //            PromoCard(screenWidth)
-            PromoPager(
-                screenWidth = 400.dp,
-                imageUrls = listOf(
-                    "https://picsum.photos/800/400",   // Random image (changes on refresh)
-                    "https://placekitten.com/800/400", // Cute kittens 🐱
-                    "https://via.placeholder.com/800x400.png?text=Promo+1", // Placeholder with text
-                    "https://loremflickr.com/800/400/nature", // Random nature photo 🌿
-                    "https://dummyimage.com/800x400/000/fff&text=Demo+Banner" // Custom text banner
-                )
+//            PromoPager(
+//                screenWidth = 400.dp,
+//                imageUrls = listOf(
+//                    "https://picsum.photos/800/400",   // Random image (changes on refresh)
+//                    "https://placekitten.com/800/400", // Cute kittens 🐱
+//                    "https://via.placeholder.com/800x400.png?text=Promo+1", // Placeholder with text
+//                    "https://loremflickr.com/800/400/nature", // Random nature photo 🌿
+//                    "https://dummyimage.com/800x400/000/fff&text=Demo+Banner" // Custom text banner
+//                )
+//            )
+            val toppers = listOf(
+                Topper("Atik", 85, "Mathematics", "Matrix Exam", 2023, "https://picsum.photos/200/200"),
+                Topper("Priya Sharma", 92, "Physics", "Final Exam", 2024, "https://placekitten.com/200/200"),
+                Topper("Rahul Mehta", 95, "Chemistry", "Mid Term", 2023, "https://loremflickr.com/200/200/student"),
+                Topper("Sneha Verma", 88, "Biology", "Quarterly", 2022, "https://via.placeholder.com/200")
             )
+            TopperPager(toppers)
             Spacer(modifier = Modifier.height(32.dp))
 
 //             You can add more sections here (achievements, featured courses etc.)
@@ -290,7 +302,7 @@ fun popularCourses(imageUrl: String,
 }
 //popularCourses()
 @Composable
-fun TopBar() {
+fun TopBar(navController: NavController) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -337,7 +349,9 @@ fun TopBar() {
                         color = Color.Gray, // Border color
                         shape = CircleShape
                     )
-                    .clip(CircleShape)
+                    .clip(CircleShape).clickable {
+                        navController.navigate("refferal") // Note: Fixed the typo as well!
+                    }
                     .padding(8.dp) // Space between border and icon
             ) {
                 Icon(
@@ -348,22 +362,22 @@ fun TopBar() {
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-            Box {
-                Icon(
-                    painter = painterResource(id = R.drawable.notification),
-                    contentDescription = "Notifications",
-                    tint = Color(0xFFFFAD05),
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(Color.Red, shape = CircleShape)
-                        .align(Alignment.TopEnd)
-                )
-            }
+//            Spacer(modifier = Modifier.width(16.dp))
+//            Box {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.notification),
+//                    contentDescription = "Notifications",
+//                    tint = Color(0xFFFFAD05),
+//                    modifier = Modifier.size(32.dp)
+//                )
+//
+//                Box(
+//                    modifier = Modifier
+//                        .size(10.dp)
+//                        .background(Color.Red, shape = CircleShape)
+//                        .align(Alignment.TopEnd)
+//                )
+//            }
         }
     }
 }
@@ -444,6 +458,219 @@ fun PromoPager(
         }
     }
 }
+//@OptIn(ExperimentalFoundationApi::class)
+//@Composable
+//fun TopperPager(
+//    toppers: List<Topper>
+//) {
+//    val pagerState = rememberPagerState(initialPage = 0) { toppers.size }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        // Horizontal pager showing each topper
+//        HorizontalPager(
+//            state = pagerState,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(300.dp)
+//        ) { page ->
+//            val topper = toppers[page]
+//            Card(
+//                shape = RoundedCornerShape(16.dp),
+//                elevation = CardDefaults.cardElevation(8.dp),
+//                colors = CardDefaults.cardColors(containerColor = Color.White),
+//                modifier = Modifier
+//                    .padding(horizontal = 16.dp)
+//                    .fillMaxWidth()
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .background(Color.White)
+//                        .padding(16.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                    verticalArrangement = Arrangement.Center
+//                ) {
+//                    AsyncImage(
+//                        model = topper.imageUrl,
+//                        contentDescription = "Topper Image",
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .size(120.dp)
+//                            .clip(CircleShape)
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(12.dp))
+//
+//                    Text(
+//                        text = topper.name,
+//                        fontSize = 18.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = Color.Black
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(4.dp))
+//
+//                    Text(
+//                        text = "Marks: ${topper.marks}/100",
+//                        fontSize = 15.sp,
+//                        color = Color(0xFF444444)
+//                    )
+//
+//                    Text(
+//                        text = "Exam: ${topper.exam}",
+//                        fontSize = 14.sp,
+//                        color = Color.Gray
+//                    )
+//                }
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        // Pager Indicator
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.Center
+//        ) {
+//            repeat(toppers.size) { index ->
+//                val isSelected = pagerState.currentPage == index
+//                Box(
+//                    modifier = Modifier
+//                        .padding(4.dp)
+//                        .width(if (isSelected) 24.dp else 12.dp)
+//                        .height(8.dp)
+//                        .background(
+//                            color = if (isSelected) Color(0xFFFFC107) else Color.LightGray,
+//                            shape = RoundedCornerShape(50)
+//                        )
+//                )
+//            }
+//        }
+//    }
+//}
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TopperPager(
+    toppers: List<Topper>,
+    autoSlideDuration: Long = 3000L // 3 seconds per slide
+) {
+    val pagerState = rememberPagerState(initialPage = 0) { toppers.size }
+
+    // 🔁 Auto-slide logic using coroutine
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(autoSlideDuration)
+            val nextPage = (pagerState.currentPage + 1) % toppers.size
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Horizontal Pager showing topper cards
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(340.dp)
+        ) { page ->
+            val topper = toppers[page]
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = topper.imageUrl,
+                        contentDescription = "Topper Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = topper.name,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Subject: ${topper.subject}",
+                        fontSize = 15.sp,
+                        color = Color(0xFF3F51B5)
+                    )
+
+                    Text(
+                        text = "Marks: ${topper.marks}/100",
+                        fontSize = 15.sp,
+                        color = Color(0xFF444444)
+                    )
+
+                    Text(
+                        text = "Exam: ${topper.exam}",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+
+                    Text(
+                        text = "Year: ${topper.year}",
+                        fontSize = 13.sp,
+                        color = Color(0xFF757575)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Pager Indicator (dots)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(toppers.size) { index ->
+                val isSelected = pagerState.currentPage == index
+                Box(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .width(if (isSelected) 24.dp else 12.dp)
+                        .height(8.dp)
+                        .background(
+                            color = if (isSelected) Color(0xFFFFC107) else Color.LightGray,
+                            shape = RoundedCornerShape(50)
+                        )
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun StartExcellingSection() {
     Row(
@@ -544,6 +771,27 @@ fun WatchFreeButton() {
                 }
             )
 
+        }
+    }
+}
+@Composable
+fun TopperCard(name: String, marks: Int, exam: String, imageUrl: String) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .size(200.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.size(100.dp).clip(CircleShape))
+            Text(text = name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = "Marks: $marks/100")
+            Text(text = "Exam: $exam")
         }
     }
 }

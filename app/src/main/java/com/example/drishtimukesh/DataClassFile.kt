@@ -1,5 +1,7 @@
 package com.example.drishtimukesh
 
+import kotlin.math.roundToInt
+
 enum class ClassType {
     CLASS_9,CLASS_10, CLASS_11, CLASS_12
 }
@@ -44,3 +46,24 @@ data class Lecture(
     val videoUrl: String = "",
     val pdfLink: String = ""
 )
+data class Topper(
+    val name: String,
+    val marks: Int,
+    val subject: String,
+    val exam: String,
+    val year: Int,
+    val imageUrl: String
+)
+
+
+data class SubscriptionOption(
+    val name: String,
+    val durationInMonths: Int,
+    val monthlyPrice: Double,
+    val discountPercent: Double,
+    val finalPrice: Double
+) {
+    val totalOriginalPrice: Double = monthlyPrice * durationInMonths
+    val totalDiscount: Double = totalOriginalPrice - finalPrice
+    val savingsPercent: Int = (totalDiscount / totalOriginalPrice * 100).roundToInt()
+}
