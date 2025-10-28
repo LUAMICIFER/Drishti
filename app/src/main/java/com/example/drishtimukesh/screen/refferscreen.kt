@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.drishtimukesh.R
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -94,7 +95,11 @@ suspend fun fetchReferralUserState(userId: String): ReferralUserState {
 fun ReferralScreen(navController: NavHostController) {
     // --- State Management for Firestore Data ---
     // Mocked User ID for demonstration (Replace with actual FirebaseAuth.getInstance().currentUser?.uid in production)
-    val currentUserId = "mock_user_123"
+    val currentUserId: String = remember {
+        // Returns the UID if the user is logged in, otherwise an empty string.
+        // Assumes FirebaseAuth is initialized.
+        FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    }
 
     var userState by remember { mutableStateOf(ReferralUserState()) }
 

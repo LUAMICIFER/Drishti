@@ -63,7 +63,15 @@ data class SubscriptionOption(
     val discountPercent: Double,
     val finalPrice: Double
 ) {
-    val totalOriginalPrice: Double = monthlyPrice * durationInMonths
-    val totalDiscount: Double = totalOriginalPrice - finalPrice
-    val savingsPercent: Int = (totalDiscount / totalOriginalPrice * 100).roundToInt()
+    // Calculated property for total original price
+    val originalPrice: Double
+        get() = monthlyPrice * durationInMonths
+
+    // Calculated property for the total amount discounted
+    val totalDiscount: Double
+        get() = originalPrice - finalPrice
+
+    // Calculated property for savings percentage displayed on the card
+    val savingsPercent: Int
+        get() = discountPercent.roundToInt()
 }

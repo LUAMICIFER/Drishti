@@ -82,6 +82,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.3.1")// exoplayer
     implementation("androidx.media3:media3-ui:1.3.1")
 
-    implementation("com.razorpay:checkout:1.6.33") //razor pay
-
+    implementation("com.razorpay:checkout:1.6.40") //razor pay
+    implementation ("androidx.appcompat:appcompat:1.6.1") // or a newer stable version
+    implementation ("com.google.code.gson:gson:2.10.1")
 }
