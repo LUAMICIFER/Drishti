@@ -455,6 +455,7 @@ fun PaymentBottomBar(selectedOption: SubscriptionOption?) {
             }
         }
     }
+
 }
 
 // --- PREVIEWS ---

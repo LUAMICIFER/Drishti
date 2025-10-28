@@ -1,4 +1,5 @@
 package com.example.drishtimukesh.screen
+import com.example.drishtimukesh.screen.PaymentActivity
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -423,8 +424,14 @@ private fun CourseContent(
         ) {
             items(courses, key = { it.id }) { course ->
                 CourseItem(course = course, onEnrollClick = {
-                    navController.navigate("CourseDescriptionScreen/${course.id}")
+                    val context = navController.context
+                    val intent = android.content.Intent(context, com.example.drishtimukesh.screen.PaymentActivity::class.java)
+                    intent.putExtra("COURSE_ID", course.id)
+                    intent.putExtra("COURSE_NAME", course.name)
+                    intent.putExtra("COURSE_PRICE", course.price)
+                    context.startActivity(intent)
                 })
+
             }
         }
     }
