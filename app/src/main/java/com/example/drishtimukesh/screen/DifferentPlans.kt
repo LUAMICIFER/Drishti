@@ -3,6 +3,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 
 import android.R.attr.colorPrimary
+import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -46,7 +47,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -71,7 +71,10 @@ import com.example.drishtimukesh.R
 import com.example.drishtimukesh.SubscriptionOption
 import com.example.drishtimukesh.getCourseById
 import kotlin.math.roundToInt
-
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 fun getSubscriptionOptions(baseMonthlyPrice: Double, courseClass: String): List<SubscriptionOption> {
     val isHigherClass = courseClass == "Class_11" || courseClass == "Class_12"
 
@@ -165,7 +168,7 @@ fun PaymentScreen(courseId: String, navController: NavController) {
             )
         },
         bottomBar = {
-            PaymentBottomBar(selectedOption)
+            PaymentBottomBar(selectedOption=selectedOption, course = course)
         }
     ) { paddingValues ->
         if (isLoading) {
@@ -188,8 +191,8 @@ fun PaymentScreen(courseId: String, navController: NavController) {
             ){
                 Box(
                     modifier = Modifier
-                    .matchParentSize()
-                    .background(Color(0xFFF0F0F0)) // Placeholder color if resource is missing
+                        .matchParentSize()
+                        .background(Color(0xFFF0F0F0)) // Placeholder color if resource is missing
                 ) {
 
                     // --- USER: REPLACE THIS BLOCK WITH YOUR IMAGE COMPONENT ---
@@ -336,59 +339,11 @@ fun SubscriptionCard(
         }
     }
 }
-
-//@Composable
-//fun PaymentBottomBar(selectedOption: SubscriptionOption?) {
-//    Card(
-//        modifier = Modifier.fillMaxWidth(),
-//        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-//        elevation = CardDefaults.cardElevation(16.dp),
-//        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-//    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            horizontalArrangement = Arrangement.SpaceBetween,
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Column {
-//                Text(
-//                    text = selectedOption?.name ?: "Select a Plan",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    color = Color.Gray
-//                )
-//                Text(
-//                    text = "₹${selectedOption?.finalPrice?.roundToInt() ?: 0}",
-//                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
-//                )
-//            }
-//
-//            Button(
-//                onClick = {
-//                    println("PROCEED TO PAYMENT for ${selectedOption?.name}")
-//                    // TODO: Implement actual payment gateway navigation
-//
-//                },
-//                enabled = selectedOption != null,
-//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856)),
-//                modifier = Modifier
-//                    .width(180.dp)
-//                    .height(50.dp)
-//            ) {
-//                Text(
-//                    "Proceed",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    fontWeight = FontWeight.Bold,
-//                    color = Color.Black
-//                )
-//            }
-//        }
-//    }
-//}
 @Composable
-fun PaymentBottomBar(selectedOption: SubscriptionOption?) {
-    // CRITICAL: Get the current context for accessing the Activity
+fun PaymentBottomBar(
+    selectedOption: SubscriptionOption?,
+    course: Course? // ✅ Pass the course here
+) {
     val context = LocalContext.current
 
     Card(
@@ -418,33 +373,26 @@ fun PaymentBottomBar(selectedOption: SubscriptionOption?) {
 
             Button(
                 onClick = {
-                    // 1. Find the hosting Activity
-                    val activity = context.findActivity()
+                    if (course != null && selectedOption != null) {
+                        val intent = Intent(context, PaymentActivity::class.java).apply {
+                            putExtra("COURSE_ID", course.id)
+                            putExtra("COURSE_NAME", course.name)
+                            putExtra("COURSE_PRICE", course.price)
+                            putExtra("PLAN_NAME", selectedOption.name)
+                            putExtra("SUBSCRIPTION_MONTHS", selectedOption.durationInMonths)
+                            putExtra("FINAL_PRICE", selectedOption.finalPrice.roundToInt())
 
-                    // 2. Check if the activity is the one hosting the payment logic
-                    if (activity is PaymentActivity) {
-                        val amount = selectedOption?.finalPrice ?: 0.0
-
-                        if (amount > 0) {
-                            Log.i("Payment", "Initiating payment for: ${selectedOption?.name} - ₹$amount")
-                            activity.startRazorpayPayment(
-                                activity = activity,
-                                amountInRupees = amount,
-                                // IMPORTANT: Replace these mock values with actual user data from your app's state
-                                userEmail = "current.user@example.com",
-                                userContact = "9999999999"
-                            )
                         }
+                        context.startActivity(intent)
                     } else {
-                        // This error should only occur if the screen is previewed or launched incorrectly
-                        Log.e("Payment", "ERROR: Hosting Activity is not PaymentActivity. Cannot initiate payment.")
+                        Log.e("PaymentBottomBar", "Course or plan not selected")
                     }
                 },
-                enabled = selectedOption != null,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856)),
                 modifier = Modifier
                     .width(180.dp)
-                    .height(50.dp)
+                    .height(50.dp),
+                enabled = selectedOption != null && course != null
             ) {
                 Text(
                     "Proceed",
@@ -455,9 +403,7 @@ fun PaymentBottomBar(selectedOption: SubscriptionOption?) {
             }
         }
     }
-
 }
-
 // --- PREVIEWS ---
 
 @Preview

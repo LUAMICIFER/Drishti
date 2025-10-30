@@ -1,6 +1,7 @@
 package com.example.drishtimukesh.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -32,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +55,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +71,9 @@ import com.example.drishtimukesh.Course
 import com.example.drishtimukesh.R
 import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
 import com.example.drishtimukesh.Topper
+import com.example.drishtimukesh.YourSubject
 import com.example.drishtimukesh.addFullCourseHierarchy
+import com.example.drishtimukesh.getAllToppersFromFirebase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -76,9 +81,11 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun HomeScreen(navController : NavHostController) {
-    BoxWithConstraints(modifier = Modifier
-        .background(Color.White)
-        .fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .background(Color.White)
+            .fillMaxSize()
+    ) {
         val screenWidth = maxWidth
         val padding = if (screenWidth < 600.dp) 16.dp else 32.dp
         val titleFontSize = if (screenWidth < 600.dp) 32.sp else 43.6.sp
@@ -105,7 +112,8 @@ fun HomeScreen(navController : NavHostController) {
                     .fillMaxWidth()
                     .padding(8.dp)
                     .height(52.dp), // Reduced height
-                label = { Text(
+                label = {
+                    Text(
                         buildAnnotatedString {
                             withStyle(
                                 style = MaterialTheme.typography.titleMedium.toSpanStyle().copy(
@@ -122,17 +130,18 @@ fun HomeScreen(navController : NavHostController) {
                                 append("Course")
                             }
                         }
-                    ) },
+                    )
+                },
                 leadingIcon = {
                     val iconRes = R.drawable.search
-                        Icon(
-                            painter = painterResource(id = iconRes),
-                            contentDescription = "Toggle Password Visibility"
-                        )
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = "Toggle Password Visibility"
+                    )
                 },
                 trailingIcon = {
                     val iconRes = R.drawable.filter
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = { }) {
                         Icon(
                             painter = painterResource(id = iconRes),
                             contentDescription = "Toggle Password Visibility"
@@ -149,29 +158,68 @@ fun HomeScreen(navController : NavHostController) {
 //            ExploreButton()
 
             Spacer(modifier = Modifier.height(24.dp))
+//            TopperPager(toppers)
+//            var toppers by remember { mutableStateOf<List<Topper>>(emptyList()) }
+//            var isLoading by remember { mutableStateOf(true) }
 
-//            PromoCard(screenWidth)
-//            PromoPager(
-//                screenWidth = 400.dp,
-//                imageUrls = listOf(
-//                    "https://picsum.photos/800/400",   // Random image (changes on refresh)
-//                    "https://placekitten.com/800/400", // Cute kittens 🐱
-//                    "https://via.placeholder.com/800x400.png?text=Promo+1", // Placeholder with text
-//                    "https://loremflickr.com/800/400/nature", // Random nature photo 🌿
-//                    "https://dummyimage.com/800x400/000/fff&text=Demo+Banner" // Custom text banner
-//                )
-//            )
-            val toppers = listOf(
-                Topper("Atik", 85, "Mathematics", "Matrix Exam", 2023, "https://picsum.photos/200/200"),
-                Topper("Priya Sharma", 92, "Physics", "Final Exam", 2024, "https://placekitten.com/200/200"),
-                Topper("Rahul Mehta", 95, "Chemistry", "Mid Term", 2023, "https://loremflickr.com/200/200/student"),
-                Topper("Sneha Verma", 88, "Biology", "Quarterly", 2022, "https://via.placeholder.com/200")
-            )
-            TopperPager(toppers)
+            // Use LaunchedEffect to fetch data when the composable enters composition
+//            LaunchedEffect(Unit) {
+//                toppers = getAllToppersFromFirebase()
+//                isLoading = false
+//            }
+//            TopperPager(toppers)
+
+            var toppers by remember { mutableStateOf<List<Topper>>(emptyList()) }
+            var isLoading by remember { mutableStateOf(true) }
+            var error by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(Unit) {
+                try {
+                    toppers = getAllToppersFromFirebase()
+                    if (toppers.isEmpty()) {
+                        error = "No topper data found"
+                    }
+                } catch (e: Exception) {
+                    error = "Failed to load toppers: ${e.message}"
+                    Log.e("HomeScreen", "Firebase error", e)
+                } finally {
+                    isLoading = false
+                }
+            }
+
+            // Show loading, error, or content
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (error != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = error!!,
+                        color = Color.Red,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                TopperPager(toppers)
+            }
+
+            // Show loading or content
+
             Spacer(modifier = Modifier.height(32.dp))
 
 //             You can add more sections here (achievements, featured courses etc.)
-            popularCourses (
+            popularCourses(
                 imageUrl = "https://picsum.photos/200/300",
                 title = "Design Training",
                 subtitle = "Become a Pro Beginner Today!",
@@ -189,7 +237,8 @@ fun HomeScreen(navController : NavHostController) {
                 onClick = {
                     // Launch the suspend function inside the coroutine scope
                     scope.launch {
-                        Toast.makeText(context, "Adding course hierarchy...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Adding course hierarchy...", Toast.LENGTH_SHORT)
+                            .show()
 
                         // Call the function defined in DrishtiCourseData.kt
                         val newCourseId = addFullCourseHierarchy("Class_10")
@@ -225,78 +274,78 @@ fun popularCourses(imageUrl: String,
                    price: String,
                    oldPrice: String,
                    onEnrollClick: () -> Unit) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            elevation = CardDefaults.cardElevation(6.dp)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Course Image
+            Image(
+                painter = rememberAsyncImagePainter(model = imageUrl),
+                contentDescription = "Course Image",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Course Image
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageUrl),
-                    contentDescription = "Course Image",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Price Section
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = price,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = oldPrice,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color.Gray,
+                            textDecoration = TextDecoration.LineThrough
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Enroll Button
+                Button(
+                    onClick = onEnrollClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Price Section
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = price,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = oldPrice,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color.Gray,
-                                textDecoration = TextDecoration.LineThrough
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Enroll Button
-                    Button(
-                        onClick = onEnrollClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Text("Enroll Now")
-                    }
+                    Text("Enroll Now")
                 }
             }
         }
+    }
 
 
 }
@@ -361,109 +410,28 @@ fun TopBar(navController: NavController) {
                     tint = Color.Unspecified
                 )
             }
-
-//            Spacer(modifier = Modifier.width(16.dp))
-//            Box {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.notification),
-//                    contentDescription = "Notifications",
-//                    tint = Color(0xFFFFAD05),
-//                    modifier = Modifier.size(32.dp)
-//                )
-//
-//                Box(
-//                    modifier = Modifier
-//                        .size(10.dp)
-//                        .background(Color.Red, shape = CircleShape)
-//                        .align(Alignment.TopEnd)
-//                )
-//            }
         }
     }
 }
 
-//@Composable
-@Composable
-fun ExploreButton() {
-    Button(
-        onClick = { /* Navigate to explore */ },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
-        border = BorderStroke(1.dp, Color.Yellow),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Text(
-            text = "Explore our exclusively curated courses",
-            style = MaterialTheme.typography.labelSmall
-        )
-    }
-}
 
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun PromoPager(
-    screenWidth: Dp,
-    imageUrls: List<String> // list of image URLs
-) {
-    val pagerState = rememberPagerState(initialPage = 0) { imageUrls.size }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Pager (Carousel)
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-        ) { page ->
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                AsyncImage(
-                    model = imageUrls[page],
-                    contentDescription = "Promo Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // crop nicely
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Indicator (dots)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(imageUrls.size) { index ->
-                val isSelected = pagerState.currentPage == index
-                Box(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .width(if (isSelected) 24.dp else 16.dp) // 👈 wider for rectangle
-                        .height(8.dp) // 👈 fixed height
-                        .background(
-                            color = if (isSelected) Color.Yellow else Color.Gray,
-                            shape = RoundedCornerShape(50) // 👈 makes it pill-like
-                        )
-                )
-            }
-        }
-    }
-}
 //@OptIn(ExperimentalFoundationApi::class)
 //@Composable
 //fun TopperPager(
-//    toppers: List<Topper>
+//    toppers: List<Topper>,
+//    autoSlideDuration: Long = 3000L // 3 seconds per slide
 //) {
 //    val pagerState = rememberPagerState(initialPage = 0) { toppers.size }
+//
+//    // 🔁 Auto-slide logic using coroutine
+//    LaunchedEffect(Unit) {
+//        while (true) {
+//            delay(autoSlideDuration)
+//            val nextPage = (pagerState.currentPage + 1) % toppers.size
+//            pagerState.animateScrollToPage(nextPage)
+//        }
+//    }
 //
 //    Column(
 //        modifier = Modifier
@@ -471,12 +439,12 @@ fun PromoPager(
 //            .padding(vertical = 8.dp),
 //        horizontalAlignment = Alignment.CenterHorizontally
 //    ) {
-//        // Horizontal pager showing each topper
+//        // Horizontal Pager showing topper cards
 //        HorizontalPager(
 //            state = pagerState,
 //            modifier = Modifier
 //                .fillMaxWidth()
-//                .height(300.dp)
+//                .height(340.dp)
 //        ) { page ->
 //            val topper = toppers[page]
 //            Card(
@@ -500,11 +468,11 @@ fun PromoPager(
 //                        contentDescription = "Topper Image",
 //                        contentScale = ContentScale.Crop,
 //                        modifier = Modifier
-//                            .size(120.dp)
+//                            .size(110.dp)
 //                            .clip(CircleShape)
 //                    )
 //
-//                    Spacer(modifier = Modifier.height(12.dp))
+//                    Spacer(modifier = Modifier.height(10.dp))
 //
 //                    Text(
 //                        text = topper.name,
@@ -514,6 +482,12 @@ fun PromoPager(
 //                    )
 //
 //                    Spacer(modifier = Modifier.height(4.dp))
+//
+//                    Text(
+//                        text = "Subject: ${topper.subject}",
+//                        fontSize = 15.sp,
+//                        color = Color(0xFF3F51B5)
+//                    )
 //
 //                    Text(
 //                        text = "Marks: ${topper.marks}/100",
@@ -526,13 +500,19 @@ fun PromoPager(
 //                        fontSize = 14.sp,
 //                        color = Color.Gray
 //                    )
+//
+//                    Text(
+//                        text = "Year: ${topper.year}",
+//                        fontSize = 13.sp,
+//                        color = Color(0xFF757575)
+//                    )
 //                }
 //            }
 //        }
 //
 //        Spacer(modifier = Modifier.height(12.dp))
 //
-//        // Pager Indicator
+//        // Pager Indicator (dots)
 //        Row(
 //            modifier = Modifier.fillMaxWidth(),
 //            horizontalArrangement = Arrangement.Center
@@ -553,6 +533,7 @@ fun PromoPager(
 //        }
 //    }
 //}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TopperPager(
@@ -569,7 +550,19 @@ fun TopperPager(
             pagerState.animateScrollToPage(nextPage)
         }
     }
+    if (toppers.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No topper data available")
+        }
+        return
+    }
 
+//    val pagerState = rememberPagerState(initialPage = 0) { toppers.size }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -581,7 +574,7 @@ fun TopperPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(340.dp)
+                .height(400.dp) // Increased height to accommodate multiple subjects
         ) { page ->
             val topper = toppers[page]
             Card(
@@ -600,8 +593,9 @@ fun TopperPager(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    // Profile Image
                     AsyncImage(
-                        model = topper.imageUrl,
+                        model = convertDriveLink(topper.imageUrl),
                         contentDescription = "Topper Image",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -609,39 +603,59 @@ fun TopperPager(
                             .clip(CircleShape)
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
+                    // Name
                     Text(
                         text = topper.name,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
+                    // Exam and Year
                     Text(
-                        text = "Subject: ${topper.subject}",
-                        fontSize = 15.sp,
-                        color = Color(0xFF3F51B5)
-                    )
-
-                    Text(
-                        text = "Marks: ${topper.marks}/100",
-                        fontSize = 15.sp,
-                        color = Color(0xFF444444)
-                    )
-
-                    Text(
-                        text = "Exam: ${topper.exam}",
+                        text = "${topper.exam} • ${topper.year}",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
 
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Subjects List
                     Text(
-                        text = "Year: ${topper.year}",
-                        fontSize = 13.sp,
-                        color = Color(0xFF757575)
+                        text = "Subjects & Marks",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF3F51B5)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Display all subjects
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        topper.subjects.forEach { subject ->
+                            SubjectRow(subject = subject)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Total Marks
+                    val totalMarks = topper.subjects.sumOf { it.marks }
+                    val maxTotalMarks = topper.subjects.sumOf { it.maxMarks }
+                    Text(
+                        text = "Total: $totalMarks/$maxTotalMarks",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
                     )
                 }
             }
@@ -671,6 +685,31 @@ fun TopperPager(
     }
 }
 
+@Composable
+fun SubjectRow(subject: YourSubject) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = subject.subjectName,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF444444),
+            modifier = Modifier.weight(1f)
+        )
+
+        Text(
+            text = "${subject.marks}/${subject.maxMarks}",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF2196F3)
+        )
+    }
+}
 @Composable
 fun StartExcellingSection() {
     Row(
@@ -795,7 +834,16 @@ fun TopperCard(name: String, marks: Int, exam: String, imageUrl: String) {
         }
     }
 }
-
+fun convertDriveLink(originalLink: String): String {
+    val regex = "https://drive\\.google\\.com/file/d/(.*?)/".toRegex()
+    val match = regex.find(originalLink)
+    val fileId = match?.groupValues?.get(1)
+    return if (fileId != null) {
+        "https://drive.google.com/uc?export=view&id=$fileId"
+    } else {
+        originalLink // return as-is if not a drive link
+    }
+}
 @Preview
 @Composable
 private fun homes() {

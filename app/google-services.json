@@ -1,10 +1,48 @@
 {
   "project_info": {
     "project_number": "750496390361",
+    "firebase_url": "https://drishtimukesh-fd807-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "drishtimukesh-fd807",
     "storage_bucket": "drishtimukesh-fd807.firebasestorage.app"
   },
   "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750496390361:android:1ef01f8516f9cac159f2c8",
+        "android_client_info": {
+          "package_name": "com.example.drishtiadmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "750496390361-09ouodr7erst6bt4tv56r5m2n7pg4vbm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drishtiadmin",
+            "certificate_hash": "425a22a9d53e1d0cf6356b0f2c77c51c97688cbb"
+          }
+        },
+        {
+          "client_id": "750496390361-5dmnki45c2ous8f90nhqbqe9gcp4vabj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBay3a6gKA_3OK5he0GcvbOwGETPaeCyQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "750496390361-5dmnki45c2ous8f90nhqbqe9gcp4vabj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
     {
       "client_info": {
         "mobilesdk_app_id": "1:750496390361:android:334bdd2e243496cf59f2c8",
@@ -13,6 +51,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "750496390361-4qiuc9riueijb8h5ut0m5beg76pkihq4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drishtimukesh",
+            "certificate_hash": "dad415277b62a91196e13a6294f76961d7ecb608"
+          }
+        },
+        {
+          "client_id": "750496390361-dl7jl31kqj60maj26npm0mc7urq9sqtn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drishtimukesh",
+            "certificate_hash": "425a22a9d53e1d0cf6356b0f2c77c51c97688cbb"
+          }
+        },
         {
           "client_id": "750496390361-q7vj4s2g14qa8i4mnoemhgdjupokcg76.apps.googleusercontent.com",
           "client_type": 1,

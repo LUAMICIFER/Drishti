@@ -48,11 +48,15 @@ data class Lecture(
 )
 data class Topper(
     val name: String,
-    val marks: Int,
-    val subject: String,
+    val subjects: List<YourSubject>, // Changed from single subject to list
     val exam: String,
     val year: Int,
     val imageUrl: String
+)
+data class YourSubject(
+    val subjectName: String,
+    val marks: Int,
+    val maxMarks: Int = 100
 )
 
 

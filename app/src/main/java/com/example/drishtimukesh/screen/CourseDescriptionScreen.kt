@@ -1,185 +1,49 @@
 package com.example.drishtimukesh.screen
 
-//import android.graphics.Color
-import android.graphics.Color.blue
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.TabRowDefaults.Divider
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.drishtimukesh.Course
-import com.example.drishtimukesh.Subject
-import com.example.drishtimukesh.getCourseById
-import com.example.drishtimukesh.getSubjectsByCourseId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.drishtimukesh.Chapter
-import com.example.drishtimukesh.Lecture
-import com.example.drishtimukesh.getChaptersBySubjectId
-import com.example.drishtimukesh.getLecturesByChapterId
+import com.example.drishtimukesh.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun CourseDetailScreen(courseId : String,navController: NavController) {
-//    var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
-//    LaunchedEffect(courseId) {
-//        subjects = getSubjectsByCourseId(courseId) // ✅ safe call
-//    }
-//    var course by remember { mutableStateOf<Course?>(null) }
-//
-//    LaunchedEffect(courseId) {
-//        course = getCourseById(courseId)
-//    }
-//    var isSubscribed : Boolean = true
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text(course?.name ?: "NOT FOUND", maxLines = 1) },
-//                navigationIcon = {
-//                    IconButton(onClick = { navController.popBackStack() }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Go back")
-//                    }
-//                }
-//            )
-//        },
-//        bottomBar = {
-//            BottomEnrollmentBar(
-//                course = course,
-//                isSubscribed = isSubscribed,
-//                onEnrollClick = {
-//                    // 1. Logic for Enrollment (Payment/Navigation to checkout)
-//                    isSubscribed = true // For demo: instantly simulate subscription
-//                    println("Navigating to enrollment for ${course?.name}")
-//                },
-//                onLiveNowClick = {
-//                    // 2. Logic for Live Now (Navigation to video player)
-//                    println("Navigating to live player for ${course?.name}")
-//                }
-//            )
-//        }
-//    ) { paddingValues ->
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .verticalScroll(rememberScrollState())
-//                .padding(paddingValues)
-//        ) {
-//            // 1. Header Image Section
-//            Image(
-//                painter = rememberAsyncImagePainter(model = course?.baseImage[1]),
-//                contentDescription = "Course Banner: ${course?.name}",
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(220.dp),
-//                contentScale = ContentScale.Crop
-//            )
-//
-//            // 2. Main Content
-//            Column(modifier = Modifier.padding(16.dp)) {
-//                // Course Title and Info
-//                Text(
-//                    text = course?.name ?: "No",
-//                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-//                )
-//                Spacer(modifier = Modifier.height(4.dp))
-//                Row(verticalAlignment = Alignment.CenterVertically) {
-//                    Icon(
-//                        Icons.Default.CheckCircle,
-//                        contentDescription = "Lectures",
-//                        modifier = Modifier.size(16.dp),
-//                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-//                    )
-//                    Spacer(modifier = Modifier.width(4.dp))
-//
-//                }
-//
-//                Spacer(modifier = Modifier.height(16.dp))
-//
-//                Text(
-//                    text = "About this course",
-//                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-//                )
-//                Spacer(modifier = Modifier.height(8.dp))
-//                Text(
-//                    text = course?.description ?: "NOT FOUND",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = Color.DarkGray
-//                )
-//                Text(
-//                    text = "Course Curriculum",
-//                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-//                )
-//                Spacer(modifier = Modifier.height(12.dp))
-//
-//                // 5. Curriculum Structure (Subject -> Chapter -> Lecture)
-//                CourseCurriculum(subjects)
-//
-//            }
-//
-//        }
-//    }
-//}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseDetailScreen(courseId: String, navController: NavController) {
     var course by remember { mutableStateOf<Course?>(null) }
     var subjects by remember { mutableStateOf<List<Subject>>(emptyList()) }
+    var isSubscribed by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
     // Load course info
     LaunchedEffect(courseId) {
         course = getCourseById(courseId)
         subjects = getSubjectsByCourseId(courseId)
+        isSubscribed = hasActiveSubscription(courseId)
+        isLoading = false
     }
-
-    var isSubscribed by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -193,68 +57,83 @@ fun CourseDetailScreen(courseId: String, navController: NavController) {
             )
         },
         bottomBar = {
-            BottomEnrollmentBar(
-                course = course,
-                isSubscribed = isSubscribed,
-                onEnrollClick = {
-                    // Navigate to the new payment screen
-                    if (course != null) {
+            if (!isLoading && course != null) {
+                BottomEnrollmentBar(
+                    course = course!!,
+                    isSubscribed = isSubscribed,
+                    onEnrollClick = {
                         val route = "differentPaymentScreen/${course!!.id}"
                         navController.navigate(route)
+                    },
+                    onLiveNowClick = {
+                        // Navigate to live video or player
+                        val encodedUrl = URLEncoder.encode(course!!.liveUrl, StandardCharsets.UTF_8.toString())
+//                        navController.navigate("videoPlayerScreen/$encodedUrl")
+
+                        navController.navigate("videoPlayerScreen/${encodedUrl}")
+                        println("Navigate to live player for ${course!!.name}")
                     }
-                },
-                onLiveNowClick = {
-                    println("Navigate to live player for ${course?.name}")
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-        ) {
-            // Banner Image
-            if (course?.baseImage?.isNotEmpty() == true) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = course!!.baseImage.first()),
-                    contentDescription = "Course Banner",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp),
-                    contentScale = ContentScale.Crop
                 )
             }
+        }
+    ) { paddingValues ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+            ) {
+                // Banner Image
+                if (course?.baseImage?.isNotEmpty() == true) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = course!!.baseImage.first()),
+                        contentDescription = "Course Banner",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
 
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = course?.name ?: "Unnamed",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = course?.name ?: "Unnamed",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "About this course",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = course?.description ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.DarkGray
-                )
+                    Text(
+                        text = "About this course",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = course?.description ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.DarkGray
+                    )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "Course Curriculum",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Course Curriculum",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                CourseCurriculum(courseId = courseId, subjects = subjects,navController)
+                    CourseCurriculum(courseId = courseId, subjects = subjects, navController = navController, isSubscribed = isSubscribed)
+                }
             }
         }
     }
@@ -262,7 +141,7 @@ fun CourseDetailScreen(courseId: String, navController: NavController) {
 
 @Composable
 fun BottomEnrollmentBar(
-    course: Course?,
+    course: Course,
     isSubscribed: Boolean,
     onEnrollClick: () -> Unit,
     onLiveNowClick: () -> Unit
@@ -282,28 +161,22 @@ fun BottomEnrollmentBar(
         ) {
             if (!isSubscribed) {
                 Column {
+                    Text("Price:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     Text(
-                        text = "Price:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "₹${course?.price}",
+                        "₹${course.price}",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
                     )
                 }
             } else {
                 Text(
-                    text = "Access Included",
+                    "Access Included",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color.Green.copy(
-                            alpha = 0.8f
-                        ), fontWeight = FontWeight.SemiBold
+                        color = Color(0xFF2E7D32),
+                        fontWeight = FontWeight.SemiBold
                     )
                 )
             }
 
-            // Dynamic Button based on subscription state
             val buttonText = if (isSubscribed) "Live Now" else "Enroll Now"
             val buttonColor = if (isSubscribed) Color.Blue else Color(0xFFE53935)
             val onClickAction = if (isSubscribed) onLiveNowClick else onEnrollClick
@@ -311,31 +184,26 @@ fun BottomEnrollmentBar(
             Button(
                 onClick = onClickAction,
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                modifier = Modifier
-                    .width(160.dp)
-                    .height(50.dp)
+                modifier = Modifier.width(160.dp).height(50.dp)
             ) {
-                Text(
-                    buttonText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Text(buttonText, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
+
 @Composable
-fun CourseCurriculum(courseId: String, subjects: List<Subject>,navController: NavController) {
+fun CourseCurriculum(courseId: String, subjects: List<Subject>, navController: NavController, isSubscribed: Boolean) {
     Column(modifier = Modifier.fillMaxWidth()) {
         subjects.forEach { subject ->
-            SubjectItem(courseId = courseId, subject = subject, navController)
+            SubjectItem(courseId = courseId, subject = subject, navController = navController, isSubscribed = isSubscribed)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun SubjectItem(courseId: String, subject: Subject,navController: NavController) {
+fun SubjectItem(courseId: String, subject: Subject, navController: NavController, isSubscribed: Boolean) {
     var isExpanded by remember { mutableStateOf(false) }
     var chapters by remember { mutableStateOf<List<Chapter>>(emptyList()) }
 
@@ -367,14 +235,14 @@ fun SubjectItem(courseId: String, subject: Subject,navController: NavController)
     AnimatedVisibility(visible = isExpanded) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             chapters.forEach { chapter ->
-                ChapterItem(courseId, subject.id, chapter, navController)
+                ChapterItem(courseId = courseId, subjectId = subject.id, chapter = chapter, navController = navController, isSubscribed = isSubscribed)
             }
         }
     }
 }
 
 @Composable
-fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter,navController: NavController) {
+fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter, navController: NavController, isSubscribed: Boolean) {
     var isExpanded by remember { mutableStateOf(false) }
     var lectures by remember { mutableStateOf<List<Lecture>>(emptyList()) }
 
@@ -407,68 +275,68 @@ fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter,navControl
     AnimatedVisibility(visible = isExpanded) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             lectures.forEach { lecture ->
-                LectureItem(lecture,navController)
+                LectureItem(lecture, navController, isSubscribed)
             }
         }
     }
 }
 
 @Composable
-fun LectureItem(lecture: Lecture, navController: NavController) {
+fun LectureItem(lecture: Lecture, navController: NavController, isSubscribed: Boolean) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Lecture Name and Status
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            Icon(Icons.Default.CheckCircle, contentDescription = "Lecture Status", tint = Color.Green, modifier = Modifier.size(20.dp))
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = "Lecture Status",
+                tint = if (isSubscribed) Color.Green else Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 lecture.name,
-                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = if (isSubscribed) Color.Unspecified else Color.Gray
             )
         }
 
-        // Actions: PDF and Video
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            // PDF Resource Button (Open Link)
-            if (lecture.pdfLink.isNotBlank()) {
+        if (isSubscribed) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (lecture.pdfLink.isNotBlank()) {
+                    IconButton(onClick = { uriHandler.openUri(lecture.pdfLink) }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "View Notes PDF",
+                            tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
                 IconButton(onClick = {
-                    // Open the PDF link in an external browser
-                    uriHandler.openUri(lecture.pdfLink)
+                    val encodedUrl = URLEncoder.encode(lecture.videoUrl, StandardCharsets.UTF_8.toString())
+                    navController.navigate("VideoPlayerScreen/$encodedUrl")
                 }) {
-                    Icon(
-                        imageVector = Icons.Default.Menu, // Icon for documents/PDFs
-                        contentDescription = "View Notes PDF",
-                        tint = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f) // Softer icon color
-                    )
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Play Video", tint = MaterialTheme.colorScheme.primary)
                 }
             }
-
-            // Play Video Button (Navigate to player)
+        } else {
             IconButton(onClick = {
-                // Encode the URL before passing it as a route argument
-                val encodedUrl = URLEncoder.encode(lecture.videoUrl, StandardCharsets.UTF_8.toString())
-                navController.navigate("VideoPlayerScreen/$encodedUrl")
+                Toast.makeText(context, "Subscribe to unlock this content", Toast.LENGTH_SHORT).show()
             }) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow, // Icon for video playback
-                    contentDescription = "Play Video",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Icon(Icons.Default.Lock, contentDescription = "Locked Content", tint = Color.Gray)
             }
         }
     }
 }
 @Preview
 @Composable
-private fun hiiiiiii() {
+fun PreviewCourseDetailScreen() {
     CourseDetailScreen("100", rememberNavController())
 }

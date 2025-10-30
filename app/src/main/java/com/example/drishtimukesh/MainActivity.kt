@@ -162,20 +162,30 @@ class MainActivity : ComponentActivity() {
                         val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
                         CourseDetailScreen(courseId = courseId, navController = navController)
                     }
-                    composable("VideoPlayerScreen/{videoUrl}",
+//                    composable("VideoPlayerScreen/{videoUrl}",
+//                        arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
+//                    ) { backStackEntry ->
+//                        // Retrieve the encoded URL argument
+//                        val encodedUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
+//
+//                        // CRUCIAL: Decode the URL before passing it to the composable
+//                        val decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
+//
+//                        VideoPlayerScreen(
+//                            videoUrl = decodedUrl,
+//                            navController = navController
+//                        )
+//                    }
+                    composable(
+                        route = "videoPlayerScreen/{videoUrl}",
                         arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
                     ) { backStackEntry ->
-                        // Retrieve the encoded URL argument
                         val encodedUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
-
-                        // CRUCIAL: Decode the URL before passing it to the composable
                         val decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
 
-                        VideoPlayerScreen(
-                            videoUrl = decodedUrl,
-                            navController = navController
-                        )
+                        VideoPlayerScreen(videoUrl = decodedUrl, navController = navController)
                     }
+
                     composable("refferal") { ReferralScreen(navController=navController) }
                     composable(
                         route = "differentPaymentScreen/{courseId}",

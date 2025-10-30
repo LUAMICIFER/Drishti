@@ -274,92 +274,92 @@ fun TopBar2() {
 }
 @Composable
 private fun CourseItem(course: Course, onEnrollClick:() -> Unit) { // <-- Added onEnrollClick
-        // Helper variables to map course data to the card structure
-        val imageUrl = course.baseImage[0]
-        val title = course.name
-        val subtitle = "Class: ${course.clas.replace("_", " ")}"
-        val priceText = "₹${course.price}"
-        // Assuming 'oldPrice' is another field in your Course object (or hardcoded for now)
-        val oldPriceText = "₹${course.price + 500}" // Placeholder for an original price
+    // Helper variables to map course data to the card structure
+    val imageUrl = course.baseImage[0]
+    val title = course.name
+    val subtitle = "Class: ${course.clas.replace("_", " ")}"
+    val priceText = "₹${course.price}"
+    // Assuming 'oldPrice' is another field in your Course object (or hardcoded for now)
+    val oldPriceText = "₹${course.price + 500}" // Placeholder for an original price
 
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp, horizontal = 12.dp), // Adjusted padding
-            elevation = CardDefaults.cardElevation(6.dp)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 12.dp), // Adjusted padding
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // 1. Course Image
+            Image(
+                painter = rememberAsyncImagePainter(model = imageUrl),
+                contentDescription = "Course Image for ${course.name}",
+                modifier = Modifier
+                    .size(110.dp) // Slightly smaller size for better fit
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 1. Course Image
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageUrl),
-                    contentDescription = "Course Image for ${course.name}",
-                    modifier = Modifier
-                        .size(110.dp) // Slightly smaller size for better fit
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                // 2. Title
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2, // Optional: for long titles
+                    overflow = TextOverflow.Ellipsis
+                )
+                // 3. Subtitle (Class)
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 4. Price Section
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = priceText,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = oldPriceText,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color.Gray,
+                            textDecoration = TextDecoration.LineThrough
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 5. Enroll Button
+                Button(
+                    onClick = onEnrollClick,
+                    // Using Material Theme primary color is usually better practice,
+                    // but keeping your specified red for consistency with your request
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    // 2. Title
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                         maxLines = 2, // Optional: for long titles
-                         overflow = TextOverflow.Ellipsis
-                    )
-                    // 3. Subtitle (Class)
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // 4. Price Section
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = priceText,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = oldPriceText,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color.Gray,
-                                textDecoration = TextDecoration.LineThrough
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 5. Enroll Button
-                    Button(
-                        onClick = onEnrollClick,
-                        // Using Material Theme primary color is usually better practice,
-                        // but keeping your specified red for consistency with your request
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Text("Enroll Now", style = MaterialTheme.typography.labelMedium)
-                    }
+                    Text("Enroll Now", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
+    }
 
 }
 //CourseDesciptionScreen()
@@ -424,12 +424,7 @@ private fun CourseContent(
         ) {
             items(courses, key = { it.id }) { course ->
                 CourseItem(course = course, onEnrollClick = {
-                    val context = navController.context
-                    val intent = android.content.Intent(context, com.example.drishtimukesh.screen.PaymentActivity::class.java)
-                    intent.putExtra("COURSE_ID", course.id)
-                    intent.putExtra("COURSE_NAME", course.name)
-                    intent.putExtra("COURSE_PRICE", course.price)
-                    context.startActivity(intent)
+                    navController.navigate("CourseDescriptionScreen/${course.id}")
                 })
 
             }
@@ -443,3 +438,13 @@ private fun card() {
 //    CoursesScreen(rememberNavController())
 
 }
+//payment page ke liye
+
+//CourseItem(course = course, onEnrollClick = {
+//    val context = navController.context
+//    val intent = android.content.Intent(context, com.example.drishtimukesh.screen.PaymentActivity::class.java)
+//    intent.putExtra("COURSE_ID", course.id)
+//    intent.putExtra("COURSE_NAME", course.name)
+//    intent.putExtra("COURSE_PRICE", course.price)
+//    context.startActivity(intent)
+//})
