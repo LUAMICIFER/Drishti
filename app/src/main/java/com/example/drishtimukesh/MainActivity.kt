@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.BeyondBoundsLayout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -99,25 +104,38 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val navController = rememberNavController()
 
-            // ✅ Get login state
+            // ✅ Firebase Auth check
             val auth = FirebaseAuth.getInstance()
             val isLoggedIn = auth.currentUser != null
 
-            // ✅ Get onboarding state (suspend -> need produceState)
+            // ✅ Onboarding flag
             val hasSeenOnboarding by produceState(initialValue = false, context) {
                 value = readOnboardingCompleted(context)
             }
 
-            // ✅ Decide startDestination
+            // ✅ Decide start destination
             val startDestination = when {
-                isLoggedIn -> "home_main"        // Already logged in
-                !hasSeenOnboarding -> "onboarding" // First time user
-                else -> "signup"                // Onboarding done, but not logged in
+                isLoggedIn -> "home_main"
+                !hasSeenOnboarding -> "onboarding"
+                else -> "signup"
             }
 
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                NavHost(navController = navController, startDestination = startDestination) {
+            // ✅ Scaffold with proper padding applied to children
+            Scaffold(
+                modifier = Modifier.fillMaxSize()
+            ) { innerPadding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = startDestination,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
+                            end = innerPadding.calculateEndPadding(LayoutDirection.Ltr),
+                            bottom = innerPadding.calculateBottomPadding()
+                        )
 
+                ) {
                     composable("onboarding") {
                         val coroutineScope = rememberCoroutineScope()
                         OnboardingScreen(
@@ -156,6 +174,7 @@ class MainActivity : ComponentActivity() {
                     composable("home_main") {
                         HomeScreenContainer(navController = navController)
                     }
+
                     composable(
                         route = "CourseDescriptionScreen/{courseId}",
                         arguments = listOf(navArgument("courseId") { type = NavType.StringType })
@@ -163,20 +182,7 @@ class MainActivity : ComponentActivity() {
                         val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
                         CourseDetailScreen(courseId = courseId, navController = navController)
                     }
-//                    composable("VideoPlayerScreen/{videoUrl}",
-//                        arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
-//                    ) { backStackEntry ->
-//                        // Retrieve the encoded URL argument
-//                        val encodedUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
-//
-//                        // CRUCIAL: Decode the URL before passing it to the composable
-//                        val decodedUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
-//
-//                        VideoPlayerScreen(
-//                            videoUrl = decodedUrl,
-//                            navController = navController
-//                        )
-//                    }
+
                     composable(
                         route = "videoPlayerScreen/{videoUrl}",
                         arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
@@ -187,19 +193,21 @@ class MainActivity : ComponentActivity() {
                         VideoPlayerScreen(videoUrl = decodedUrl, navController = navController)
                     }
 
-                    composable("refferal") { ReferralScreen(navController=navController) }
+                    composable("refferal") {
+                        ReferralScreen(navController = navController)
+                    }
+
                     composable(
                         route = "differentPaymentScreen/{courseId}",
-                        // 1. Define the argument type and name
                         arguments = listOf(navArgument("courseId") { type = NavType.StringType })
                     ) { backStackEntry ->
-                        // 2. Extract the argument value from the backStackEntry
                         val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
-
-                        // 3. Pass the extracted value to your Composable
                         PaymentScreen(courseId = courseId, navController = navController)
                     }
-                    composable("signupMail") {SignUpScreenMail(navController)  }
+
+                    composable("signupMail") {
+                        SignUpScreenMail(navController)
+                    }
                 }
             }
         }
