@@ -184,7 +184,7 @@ fun SignUpScreen(navController: NavHostController) {
                             backgroundColor = Color(0xFF4285F4),
                             contentColor = Color.White
                         ) {
-                            navController.navigate("signup_email")
+                            navController.navigate("signupMail")
                         }
 
                         // Phone Button

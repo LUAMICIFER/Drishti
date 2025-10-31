@@ -438,13 +438,3 @@ private fun card() {
 //    CoursesScreen(rememberNavController())
 
 }
-//payment page ke liye
-
-//CourseItem(course = course, onEnrollClick = {
-//    val context = navController.context
-//    val intent = android.content.Intent(context, com.example.drishtimukesh.screen.PaymentActivity::class.java)
-//    intent.putExtra("COURSE_ID", course.id)
-//    intent.putExtra("COURSE_NAME", course.name)
-//    intent.putExtra("COURSE_PRICE", course.price)
-//    context.startActivity(intent)
-//})

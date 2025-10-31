@@ -28,6 +28,7 @@ import com.example.drishtimukesh.signup.DetailPage
 import com.example.drishtimukesh.signup.OnboardingScreen
 import com.example.drishtimukesh.signup.SignInScreen
 import com.example.drishtimukesh.signup.SignUpScreen
+import com.example.drishtimukesh.signup.SignUpScreenMail
 import com.example.drishtimukesh.signup.saveOnboardingCompleted
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -198,6 +199,7 @@ class MainActivity : ComponentActivity() {
                         // 3. Pass the extracted value to your Composable
                         PaymentScreen(courseId = courseId, navController = navController)
                     }
+                    composable("signupMail") {SignUpScreenMail(navController)  }
                 }
             }
         }

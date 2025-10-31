@@ -1,186 +1,374 @@
 package com.example.drishtimukesh.signup
 
-//package com.example.drishtimukesh.screen
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
+import com.example.drishtimukesh.R // Assuming R.drawable.lightmode and R.drawable.show/hide exist
+import com.example.drishtimukesh.RevolvingDashedOutlinedTextField // Custom component
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.delay
 
-//import com.example.drishtimukesh.AuthService // Import the AuthService object
+@Composable
+fun SignUpScreenMail(navController: NavController) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
+    var isVerifying by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val auth = Firebase.auth
 
-// Make sure you have the Firebase dependencies added in your build.gradle (app) file:
-// implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-// implementation("com.google.firebase:firebase-auth-ktx")
+    val isPasswordValid = password.length >= 8
+    val isFormValid = email.isNotEmpty() && isPasswordValid
 
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.tasks.await
-
-object AuthService {
-
-    private val auth = FirebaseAuth.getInstance()
-
-    /**
-     * Attempts to create a new user with email and password,
-     * and immediately sends a verification email.
-     * @return A message indicating success or the specific error.
-     */
-    suspend fun signUpAndSendVerification(email: String, password: String): String {
-        return try {
-            // 1. Create User
-            val userCredential = auth.createUserWithEmailAndPassword(email, password).await()
-            val user = userCredential.user
-
-            // 2. Send Verification Email
-            user?.sendEmailVerification()?.await()
-
-            // 3. Success message
-            "SUCCESS: Verification link sent to $email. Please check your inbox."
-
-        } catch (e: Exception) {
-            // Log the error for debugging (use Log.e in a real app)
-            e.printStackTrace()
-            // Return user-friendly error message
-            when (e.message) {
-                // Common Firebase errors
-                "The email address is already in use by another account." -> "This email is already registered."
-                "The email address is badly formatted." -> "Invalid email format."
-                "Password should be at least 6 characters" -> "Password must be at least 6 characters."
-                else -> "Sign up failed: ${e.message?.substringBefore("(") ?: "Unknown Error"}"
+    // ⏳ Polling to check email verification status
+    if (isVerifying) {
+        LaunchedEffect(Unit) {
+            val maxChecks = 100 // 5 minutes max
+            repeat(maxChecks) {
+                // Reload the user data to get the latest verification status
+                auth.currentUser?.reload()?.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        if (auth.currentUser?.isEmailVerified == true) {
+                            // 🎉 Success! Email verified
+                            isVerifying = false
+                            Toast.makeText(context, "Email verified! Redirecting...", Toast.LENGTH_LONG).show()
+                            // ➡️ Redirect to user_detail page
+                            navController.navigate("user_detail") {
+                                popUpTo("signup") { inclusive = true }
+                            }
+                        }
+                    }
+                }
+                if (isVerifying) {
+                    delay(3000L) // Wait 3 seconds before next check
+                } else {
+                    return@LaunchedEffect
+                }
+            }
+            // Timeout after maxChecks
+            if(isVerifying) {
+                Toast.makeText(context, "Verification timed out. Check your inbox!", Toast.LENGTH_LONG).show()
+                isVerifying = false
             }
         }
     }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SignUpScreen2(navController: NavHostController) {
-    // --- State Variables ---
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var statusMessage by remember { mutableStateOf<String?>(null) }
 
-    // Coroutine scope for running async tasks
-    val scope = rememberCoroutineScope()
 
-    // --- UI Layout ---
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(title = { Text("Create Account") })
-        }
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        // Background Image and Gradient (Matching DetailPage)
+        Image(
+            painter = painterResource(id = R.drawable.lightmode),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .matchParentSize()
+                .alpha(0.8f)
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFFCDB39).copy(alpha = 0.25f), Color(0xFFFFFFFF).copy(alpha = 0.1f)
+                        ),
+                        start = Offset(0f, Float.POSITIVE_INFINITY),
+                        end = Offset(Float.POSITIVE_INFINITY, 0f)
+                    )
+                )
+                .verticalScroll(rememberScrollState())
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(64.dp))
 
+            // 📝 Title and Subtitle
             Text(
-                text = "Sign up to start earning coins!",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 32.dp)
+                text = "Create Account",
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Sign up to begin your learning journey!",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                fontSize = 14.sp,
+                color = Color.Gray
             )
 
-            // 1. Email Input
-            OutlinedTextField(
+            // 📧 Email Field
+            RevolvingDashedOutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                leadingIcon = { Icon(Icons.Default.MailOutline, contentDescription = "Email") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Password Input
-            OutlinedTextField(
+            // 🔒 Password Field
+            RevolvingDashedOutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password (min 6 chars)") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
-                visualTransformation = PasswordVisualTransformation(),
+                label = { Text(text = "Password") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // 3. Sign Up Button
-            Button(
-                onClick = {
-                    if (email.isNotBlank() && password.length >= 6) {
-                        isLoading = true
-                        statusMessage = null
-                        scope.launch {
-                            val result = AuthService.signUpAndSendVerification(email, password)
-                            statusMessage = result
-                            isLoading = false
-
-                            // Optional: If successful, you might want to navigate
-                            // if (result.startsWith("SUCCESS")) {
-                            //    navController.navigate("email_check_info_screen")
-                            // }
-                        }
-                    } else {
-                        statusMessage = "Please enter a valid email and a password of 6+ characters."
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val iconRes = if (passwordVisible) R.drawable.show else R.drawable.hide
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = "Toggle Password Visibility"
+                        )
                     }
                 },
-                enabled = !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                )
+            )
+
+            // ⚠️ Password Rule Check
+            if (password.isNotEmpty() && !isPasswordValid) {
+                Text(
+                    "Password must be at least 8 characters long.",
+                    color = Color.Red,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // 🛑 Error Message Display
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            // ✅ Verification Note (New Addition)
+            if (isVerifying) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Color(0xFFFFF7E6), // Light Yellow/Cream background
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "📧 Verification Link Sent",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFFA000) // Darker Yellow/Orange
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Please click the link in your email to verify your account. If you don't see it, **check your Spam/Junk folder**, as it sometimes ends up there.",
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+
+            // ➕ Sign Up Button (Themed like DetailPage)
+            Button(
+                onClick = {
+                    loading = true
+                    errorMessage = null
+                    handleSignUp(
+                        email = email,
+                        password = password,
+                        context = context,
+                        onSuccess = {
+                            loading = false
+                            isVerifying = true // Start the verification polling
+                        },
+                        onFailure = { error ->
+                            loading = false
+                            errorMessage = error.message
+                        }
                     )
-                } else {
-                    Text("Sign Up")
+                },
+                enabled = isFormValid && !loading && !isVerifying,
+                modifier = Modifier
+                    .width(400.dp)
+                    .height(50.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF221932), Color(0xFF492f4e))
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentPadding = PaddingValues(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = Color.Gray
+                ),
+                border = BorderStroke(
+                    width = 2.dp,
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFFFB330), Color(0xFFFFFCC0))
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (loading || isVerifying) {
+                        CircularProgressIndicator(color = Color(0xFFFFC856), modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = if (isVerifying) "Awaiting Verification..." else "Signing Up...",
+                            color = Color(0xFFFFC856)
+                        )
+                    } else {
+                        Text(
+                            text = "Sign Up",
+                            color = if (isFormValid) Color(0xFFFFC856) else Color.Gray
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 4. Status Message/Error Display
-            statusMessage?.let { message ->
+            // ➡️ Login/Sign In Link
+            Row {
+                Text(text = "Already have an account? ")
                 Text(
-                    text = message,
-                    color = if (message.startsWith("SUCCESS")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp)
+                    text = "Sign In",
+                    color = Color(0xFFFFC856),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { navController.navigate("signin") }
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 5. Navigation to Login
-            TextButton(onClick = {
-                // Navigate to your login screen
-                // navController.navigate("login_screen")
-            }) {
-                Text("Already have an account? Log In")
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+// 🔐 Firebase Sign Up and Email Verification Logic
+fun handleSignUp(
+    email: String,
+    password: String,
+    context: Context,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val auth = Firebase.auth
+    auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                user?.sendEmailVerification()
+                    ?.addOnCompleteListener { emailTask ->
+                        if (emailTask.isSuccessful) {
+                            Toast.makeText(
+                                context,
+                                "Sign up successful. Verification email sent to $email",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            // 🔥 Firebase sign out to force verification check on next login/redirect
+                            // Note: We use polling, so we keep the session active for now
+                            onSuccess()
+                        } else {
+                            // User created but email failed to send (rare, but handle it)
+                            user.delete() // Clean up the unverified user
+                            onFailure(emailTask.exception ?: Exception("Failed to send verification email."))
+                        }
+                    }
+            } else {
+                onFailure(task.exception ?: Exception("Sign up failed."))
+            }
+        }
+}
+
+
+@Preview
 @Composable
-fun PreviewSignUpScreen() {
-    MaterialTheme {
-        SignUpScreen(navController = rememberNavController())
-    }
+private fun SignUpScreenPreview() {
+    SignUpScreenMail(rememberNavController())
 }
