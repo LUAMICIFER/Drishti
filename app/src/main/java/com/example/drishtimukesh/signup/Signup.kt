@@ -63,7 +63,10 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.delay
+import android.provider.Settings
 
 
 @Composable
@@ -92,14 +95,32 @@ fun SignUpScreen(navController: NavHostController) {
             val credential = GoogleAuthProvider.getCredential(account.idToken,null)
             Firebase.auth.signInWithCredential(credential).addOnCompleteListener {
                     task->
-                if(task.isSuccessful){
-                    Toast.makeText(context,"Google Sign-up Completed",Toast.LENGTH_SHORT).show()
-                    navController.navigate("user_detail"){
-                        popUpTo("signup"){
-                            inclusive = true
+                if (task.isSuccessful) {
+                    val fUser = Firebase.auth.currentUser
+                    val deviceId = Settings.Secure.getString(
+                        context.contentResolver,
+                        Settings.Secure.ANDROID_ID
+                    )
+
+                    val userData = mapOf(
+                        "email" to (fUser?.email ?: ""),
+                        "deviceId" to deviceId
+                    )
+
+                    Firebase.firestore.collection("users")
+                        .document(fUser!!.uid)
+                        .set(userData, SetOptions.merge())
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Google Sign-up Completed", Toast.LENGTH_SHORT).show()
+                            navController.navigate("user_detail") {
+                                popUpTo("signup") { inclusive = true }
+                            }
                         }
-                    }
-                }else{
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Failed saving device ID", Toast.LENGTH_SHORT).show()
+                        }
+                }
+                else{
                     Toast.makeText(context,"Google Sign-up Failed",Toast.LENGTH_SHORT).show()
                 }
             }

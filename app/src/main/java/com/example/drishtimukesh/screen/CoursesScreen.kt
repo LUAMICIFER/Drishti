@@ -1,11 +1,6 @@
 package com.example.drishtimukesh.screen
-import com.example.drishtimukesh.screen.PaymentActivity
-
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,16 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,28 +39,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.drishtimukesh.Course
 import com.example.drishtimukesh.R
-import com.example.drishtimukesh.RevolvingDashedOutlinedTextField
 import com.example.drishtimukesh.getAllCourses
 import com.example.drishtimukesh.getCoursesByClass
 import kotlinx.coroutines.launch
-import java.sql.Date
-import java.util.Calendar
 
 
 @Composable
@@ -81,12 +63,48 @@ fun CoursesScreen(navController: NavHostController) {
 //            Log.d("FirestoreTest", "Course: ${it.name}, Id: ${it.id}")
 //        }
 //    }
+    var searchQuery by remember { mutableStateOf("") }
+    var filteredCourses by remember { mutableStateOf<List<Course>>(emptyList()) }
+    var showFilter by remember { mutableStateOf(false) }
+//          varibales for the class filters
+    // 1. STATE VARIABLES
+    // State to track the currently selected class filter
+    var selectedClass by remember { mutableStateOf("all") }
+
+    // State to hold the list of courses fetched from Firebase
+    var courses by remember { mutableStateOf(emptyList<Course>()) }
+
+    // State to manage loading status
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Coroutine scope to launch suspend functions (like Firebase calls)
+    val coroutineScope = rememberCoroutineScope()
+    val classFilters = remember { listOf("all", "Class_9", "Class_10", "Class_11", "Class_12") }
+    val loadCourses = remember<(String) -> Unit> {
+        { newClassFilter ->
+            selectedClass = newClassFilter
+            isLoading = true
+            coroutineScope.launch {
+                // Determine which function to call based on the filter
+                val fetchedCourses = if (newClassFilter == "all") {
+                    getAllCourses() // Use your existing getAllCourses function for "all"
+                } else {
+                    getCoursesByClass(newClassFilter)
+                }
+                courses = fetchedCourses
+                filteredCourses = fetchedCourses      // reset search
+                isLoading = false
+
+            }
+        }
+    }
+
+
     BoxWithConstraints(modifier = Modifier
         .background(Color.White)
         .fillMaxSize()) {
         val screenWidth = maxWidth
         val padding = if (screenWidth < 600.dp) 16.dp else 32.dp
-        val titleFontSize = if (screenWidth < 600.dp) 32.sp else 43.6.sp
         Image(
 //            painter = painterResource(id = R.drawable.doodle), // Your background image
             painter = painterResource(id = R.drawable.lightmode), // Your background image
@@ -101,86 +119,41 @@ fun CoursesScreen(navController: NavHostController) {
                 .padding(padding)
 //                .verticalScroll(rememberScrollState())
         ) {
-            var search by remember { mutableStateOf("") }
-            TopBar2()
+
+            TopBar(navController)
             Text("Course", style = MaterialTheme.typography.titleMedium.copy(fontSize = 32.sp,color = Color.Black))
             Spacer(Modifier.height(8.dp))
-            RevolvingDashedOutlinedTextField(
-                value = search,
-                onValueChange = { search = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .height(52.dp), // Reduced height
-                label = { Text(
-                    buildAnnotatedString {
-                        withStyle(
-                            style = MaterialTheme.typography.titleMedium.toSpanStyle().copy(
-                                color = Color(0xFF999999)
-                            )
-                        ) {
-                            append("Search ")
+            // Search + Filter section
+            SearchBarWithFilter(
+                modifier = Modifier,
+                onSearch = { query ->
+                    searchQuery = query
+
+                    filteredCourses =
+                        if (query.isBlank()) courses
+                        else courses.filter {
+                            it.name.contains(query, ignoreCase = true) ||
+                                    it.description.contains(query, ignoreCase = true)
                         }
-                        withStyle(
-                            style = MaterialTheme.typography.bodyLarge.toSpanStyle().copy(
-                                color = Color(0xFF1B1126)
-                            )
-                        ) {
-                            append("Course")
-                        }
-                    }
-                ) },
-                leadingIcon = {
-                    val iconRes = R.drawable.search
-                    Icon(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = "Toggle Password Visibility"
-                    )
                 },
-                trailingIcon = {
-                    val iconRes = R.drawable.filter
-                    IconButton(onClick = {  }) {
-                        Icon(
-                            painter = painterResource(id = iconRes),
-                            contentDescription = "Toggle Password Visibility"
-                        )
-                    }
+                onFilterClick = { showFilter = true }
+            )
+
+            CourseFilterBottomSheet(
+                show = showFilter,
+                classFilters = classFilters,
+                selectedClass = selectedClass,
+                onDismiss = { showFilter = false },
+                onApply = { newClass ->
+                    loadCourses(newClass)
                 }
             )
+
+            Spacer(Modifier.height(12.dp))
+
             Spacer(Modifier.height(8.dp))
             Text("Choice your Course", style = MaterialTheme.typography.titleMedium.copy(fontSize = 24.sp,color = Color.Black))
             Spacer(Modifier.height(8.dp))
-
-//          varibales for the class filters
-            // 1. STATE VARIABLES
-            // State to track the currently selected class filter
-            var selectedClass by remember { mutableStateOf("all") }
-
-            // State to hold the list of courses fetched from Firebase
-            var courses by remember { mutableStateOf(emptyList<Course>()) }
-
-            // State to manage loading status
-            var isLoading by remember { mutableStateOf(false) }
-
-            // Coroutine scope to launch suspend functions (like Firebase calls)
-            val coroutineScope = rememberCoroutineScope()
-            val classFilters = remember { listOf("all", "Class_9", "Class_10", "Class_11", "Class_12") }
-            val loadCourses = remember<(String) -> Unit> {
-                { newClassFilter ->
-                    selectedClass = newClassFilter
-                    isLoading = true
-                    coroutineScope.launch {
-                        // Determine which function to call based on the filter
-                        val fetchedCourses = if (newClassFilter == "all") {
-                            getAllCourses() // Use your existing getAllCourses function for "all"
-                        } else {
-                            getCoursesByClass(newClassFilter)
-                        }
-                        courses = fetchedCourses
-                        isLoading = false
-                    }
-                }
-            }
 
             // Load initial data when the Composable first appears.
             LaunchedEffect(Unit) {
@@ -199,12 +172,8 @@ fun CoursesScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 2. Content Display (Loading, Empty, or List)
-                CourseContent(
-                    isLoading = isLoading,
-                    courses = courses,
-                    selectedClass = selectedClass,
-                    navController =navController
-                )
+                CourseContent(isLoading, filteredCourses, selectedClass, navController)
+
             }
 
 
@@ -213,65 +182,6 @@ fun CoursesScreen(navController: NavHostController) {
     }
 }
 
-@Composable
-fun TopBar2() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row{
-            Icon(
-                painter = painterResource(id = R.drawable.arrow___right_2),
-                contentDescription = "Arrow Right",
-                modifier = Modifier.size(32.dp),
-                tint = Color(0xFFFFAD05)
-            )
-            Text(
-                text = buildAnnotatedString {
-                    // Drishti - Black, Bigger
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("Drishti")
-                    }
-                    // stitute - Yellow
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color(0xFFFFAD05),
-                            fontSize = 12.sp
-                        )
-                    ) {
-                        append("nstitute")
-                    }
-                },
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-            )
-        }
-        Row{
-            Spacer(modifier = Modifier.width(16.dp))
-            Box {
-                Icon(
-                    painter = painterResource(id = R.drawable.notification),
-                    contentDescription = "Notifications",
-                    tint = Color(0xFFFFAD05),
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(Color.Red, shape = CircleShape)
-                        .align(Alignment.TopEnd)
-                )
-            }
-        }
-    }
-}
 @Composable
 private fun CourseItem(course: Course, onEnrollClick:() -> Unit) { // <-- Added onEnrollClick
     // Helper variables to map course data to the card structure
@@ -414,7 +324,10 @@ private fun CourseContent(
         // Handle empty results
         Text(
             "No courses found for $selectedClassText.",
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            color = Color(0xFF4A3C74),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
         )
     } else {
         // Display the fetched courses in a LazyColumn
@@ -432,9 +345,3 @@ private fun CourseContent(
     }
 }
 
-@Preview
-@Composable
-private fun card() {
-//    CoursesScreen(rememberNavController())
-
-}

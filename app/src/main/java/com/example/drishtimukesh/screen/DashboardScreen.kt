@@ -2,7 +2,6 @@ package com.example.drishtimukesh.screen
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -35,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.drishtimukesh.R
+import androidx.core.net.toUri
 
 // --- Consistent Theme Colors ---
 val DarkBackground = Color(0xFF1E1E1E) // Dark block color from original
@@ -66,10 +66,12 @@ fun isValidPhone(phone: String): Boolean {
 data class SocialHandle(val id: Int, val url: String, val description: String)
 // NOTE: Using temporary Android default icons for a runnable example.
 val socialHandles = listOf(
-    SocialHandle(android.R.drawable.ic_menu_agenda, "https://www.youtube.com/yourchannel", "YouTube"),
-    SocialHandle(android.R.drawable.ic_menu_camera, "https://www.instagram.com/yourhandle", "Instagram"),
+    SocialHandle(R.drawable.platform_youtube__color_original, "https://www.youtube.com/@drishtiinstitute5667", "YouTube"),
+    SocialHandle(R.drawable.platform_instagram__color_original, "https://www.instagram.com/drishti._.institute", "Instagram"),
     SocialHandle(android.R.drawable.ic_dialog_email, "mailto:drishtiinstitute1920@gmail.com", "Gmail"),
-    SocialHandle(android.R.drawable.ic_dialog_map, "https://discord.gg/yourserver", "Discord")
+    SocialHandle(R.drawable.platform_facebook__color_original, "https://www.facebook.com/share/19rr7M3JT7/", "Facebook"),
+    SocialHandle(R.drawable.platform_whatsapp__color_original, "https://wa.me/919876543210", "Whatsapp")
+
 )
 
 /**
@@ -77,7 +79,7 @@ val socialHandles = listOf(
  */
 fun openUrl(context: Context, url: String) {
     try {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         context.startActivity(intent)
     } catch (e: Exception) {
         // Log the error or show a Toast if no app can handle the intent
@@ -121,7 +123,7 @@ fun ContactUsScreen() {
 
             val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
                 // Use mailto: for email intent and ensure recipient is set
-                data = Uri.parse("mailto:")
+                data = "mailto:".toUri()
                 putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
                 putExtra(Intent.EXTRA_SUBJECT, subjectLine)
                 putExtra(Intent.EXTRA_TEXT, body)
@@ -231,7 +233,7 @@ fun ContactUsScreen() {
                     )
                     ContactInfoItem(
                         icon = Icons.Default.LocationOn,
-                        text = "Naya bajar,bihta",
+                        text = "Naya bajar,Biteshwar pustakalay gali, bihta",
                         label = "Location",
                         modifier = Modifier.padding(top = 16.dp)
                     )
@@ -453,7 +455,7 @@ fun SocialButton(iconResId: Int, contentDescription: String, onClick: () -> Unit
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = contentDescription,
-            tint = PrimaryText,
+            tint = Color.Unspecified,
             modifier = Modifier.size(20.dp)
         )
     }

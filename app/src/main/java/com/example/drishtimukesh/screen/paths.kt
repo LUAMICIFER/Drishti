@@ -11,10 +11,10 @@ sealed class Screen(val route: String) {
 sealed class BottomNavItem(val route: String, val title: String, val iconRes: Int) {
     object Home : BottomNavItem(Screen.Home.route, "Home", R.drawable.home)
     object Courses : BottomNavItem(Screen.Courses.route, "Courses", R.drawable.category)
-    object Dashboard : BottomNavItem(Screen.Dashboard.route, "Dashboard", R.drawable.graph)
+    object contact_us : BottomNavItem(Screen.Dashboard.route, "Contact Us", R.drawable.call)
     object Profile : BottomNavItem(Screen.Profile.route, "Profile", R.drawable.profile)
 
     companion object {
-        val items = listOf(Home, Courses, Dashboard, Profile)
+        val items = listOf(Home, Courses, contact_us, Profile)
     }
 }

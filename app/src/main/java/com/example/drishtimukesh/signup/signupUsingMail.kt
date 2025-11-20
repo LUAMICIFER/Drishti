@@ -59,8 +59,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.drishtimukesh.R // Assuming R.drawable.lightmode and R.drawable.show/hide exist
 import com.example.drishtimukesh.RevolvingDashedOutlinedTextField // Custom component
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
+import android.provider.Settings
 
 @Composable
 fun SignUpScreenMail(navController: NavController) {
@@ -353,7 +355,22 @@ fun handleSignUp(
                             ).show()
                             // 🔥 Firebase sign out to force verification check on next login/redirect
                             // Note: We use polling, so we keep the session active for now
-                            onSuccess()
+//                            onSuccess()
+                            val deviceId = Settings.Secure.getString(
+                                context.contentResolver,
+                                Settings.Secure.ANDROID_ID
+                            )
+
+                            Firebase.firestore.collection("users")
+                                .document(user!!.uid)
+                                .set(mapOf("email" to email, "deviceId" to deviceId))
+                                .addOnSuccessListener {
+                                    onSuccess()
+                                }
+                                .addOnFailureListener { e ->
+                                    onFailure(e)
+                                }
+
                         } else {
                             // User created but email failed to send (rare, but handle it)
                             user.delete() // Clean up the unverified user

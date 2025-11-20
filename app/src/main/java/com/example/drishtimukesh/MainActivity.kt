@@ -1,6 +1,7 @@
 package com.example.drishtimukesh
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -30,6 +31,7 @@ import com.example.drishtimukesh.screen.PaymentScreen
 import com.example.drishtimukesh.screen.ReferralScreen
 import com.example.drishtimukesh.screen.VideoPlayerScreen
 import com.example.drishtimukesh.signup.DetailPage
+import com.example.drishtimukesh.signup.ForgotPasswordScreen
 import com.example.drishtimukesh.signup.OnboardingScreen
 import com.example.drishtimukesh.signup.SignInScreen
 import com.example.drishtimukesh.signup.SignUpScreen
@@ -39,66 +41,13 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-
-//class MainActivity : ComponentActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
-//        setContent {
-////            DrishtiMukeshTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//
-//                var context = LocalContext.current
-//
-//                    val navController = rememberNavController()
-//
-//                    NavHost(navController= navController, startDestination = "home"){
-//
-//                        composable ("onboarding"){
-//                            val coroutineScope = rememberCoroutineScope()
-//                            OnboardingScreen(
-//                                onFinish = {
-//                                    coroutineScope.launch {
-//                                        saveOnboardingCompleted(context)
-//                                        navController.navigate("signup") {
-//                                            popUpTo("onboarding") { inclusive = true }
-//                                        }
-//                                    }
-//                                },
-//                                onSignUpClick = {
-//                                    navController.navigate("signup") {
-//                                        popUpTo("onboarding") { inclusive = true }
-//                                    }
-//                                }
-//                            )
-//                        }
-//                        composable("signup") {
-//                            SignUpScreen(navController)
-//                        }
-//                        composable("user_detail") {
-//                            DetailPage(navController)
-//                        }
-//                        composable("signin") {
-//
-//                        }
-//                        composable("home") {
-//                            HomeCheckScreen(navController = navController)
-//                        }
-//
-//                        // 2) actual home UI (bottom navigation + inner nav host)
-//                        composable("home_main") {
-//                            HomeScreenContainer(navController = navController)
-//                        }
-//                    }
-//
-//                }
-////            }
-//        }
-//    }
-//}
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
@@ -208,6 +157,8 @@ class MainActivity : ComponentActivity() {
                     composable("signupMail") {
                         SignUpScreenMail(navController)
                     }
+                    composable("forgot_password") { ForgotPasswordScreen(navController) }
+
                 }
             }
         }

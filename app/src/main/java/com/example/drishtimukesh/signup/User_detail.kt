@@ -75,6 +75,7 @@ import com.google.firebase.ktx.Firebase
 import kotlin.String
 import android.provider.Settings
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.firestore.SetOptions
 
 @Composable
 fun DetailPage(navController: NavController){
@@ -533,7 +534,7 @@ fun createAccount(
 
                         // ✅ Save user details under the same UID
                         val userRef = db.collection("users").document(uid)
-                        userRef.set(user)
+                        userRef.set(user, SetOptions.merge())
                             .addOnSuccessListener { onSuccess() }
                             .addOnFailureListener { e -> onFailure(e) }
                     } else {

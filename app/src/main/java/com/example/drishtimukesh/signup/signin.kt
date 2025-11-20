@@ -1,5 +1,6 @@
 package com.example.drishtimukesh.signup
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,6 +70,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ktx.firestore // 🚨 NEW
 import com.google.firebase.auth.ktx.auth // 🚨 NEW
 import com.google.firebase.ktx.Firebase // 🚨 NEW
+import android.provider.Settings
 
 
 @Composable
@@ -95,21 +97,30 @@ fun SignInScreen(navController: NavHostController) {
 
     // 🚨 CORRECTED: Asynchronous Navigation Logic
     val navigateAfterSignIn: () -> Unit = {
-        // Use the asynchronous check
-        checkUserDetailsAvailability { hasDetails ->
+        checkUserDetailsAvailability(context) { hasDetails, validDevice ->
+            if (!validDevice) {
+                Toast.makeText(
+                    context,
+                    "Login blocked — this account is registered on another device.",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                Firebase.auth.signOut()
+                return@checkUserDetailsAvailability
+            }
+
             if (hasDetails) {
-                Toast.makeText(context, "Sign-in successful, navigating to home.", Toast.LENGTH_SHORT).show()
                 navController.navigate("home_main") {
                     popUpTo("signin") { inclusive = true }
                 }
             } else {
-                Toast.makeText(context, "Sign-in successful, completing details.", Toast.LENGTH_SHORT).show()
                 navController.navigate("user_detail") {
                     popUpTo("signin") { inclusive = true }
                 }
             }
         }
     }
+
 
     // Google Sign-in Launcher
     val googleLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -314,7 +325,8 @@ fun SignInScreen(navController: NavHostController) {
                             .padding(top = 4.dp, bottom = 8.dp)
                             .clickable {
                                 // Implement navigation to Forgot Password screen
-                                // navController.navigate("forgot_password")
+                                navController.navigate("forgot_password")
+//                                navController.navigate("forgot_password")
                             }
                             .align(Alignment.End)
                     )
@@ -371,27 +383,46 @@ fun SignInScreen(navController: NavHostController) {
  * @param onResult A callback function that receives 'true' if the details document exists,
  * or 'false' otherwise.
  */
-fun checkUserDetailsAvailability(onResult: (Boolean) -> Unit) {
+fun checkUserDetailsAvailability(
+    context: Context,
+    onResult: (Boolean, Boolean) -> Unit
+) {
     val user = Firebase.auth.currentUser
     val db = Firebase.firestore
 
     if (user == null) {
-        onResult(false)
+        onResult(false, false)
         return
     }
 
-    // Check for a document with the user's UID in the "users" collection
+    val currentDeviceId = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ANDROID_ID
+    )
+
     db.collection("users").document(user.uid).get()
-        .addOnSuccessListener { documentSnapshot ->
-            // documentSnapshot.exists() is the crucial check
-            onResult(documentSnapshot.exists())
+        .addOnSuccessListener { document ->
+            if (!document.exists()) {
+                onResult(false, true)
+                return@addOnSuccessListener
+            }
+
+            val storedDeviceId = document.getString("deviceId")
+
+            // ❌ Device mismatch → BLOCK
+            if (storedDeviceId != currentDeviceId) {
+                onResult(true, false)
+                return@addOnSuccessListener
+            }
+
+            // ✔ Device matches
+            onResult(true, true)
         }
-        .addOnFailureListener { e ->
-            Log.e("UserDetailsCheck", "Error fetching user document: ${e.message}")
-            // Assume incomplete if the check fails
-            onResult(false)
+        .addOnFailureListener {
+            onResult(false, false)
         }
 }
+
 
 @Preview
 @Composable

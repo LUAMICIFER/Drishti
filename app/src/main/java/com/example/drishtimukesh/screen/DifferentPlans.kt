@@ -1,58 +1,16 @@
 package com.example.drishtimukesh.screen
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
 
-import android.R.attr.colorPrimary
 import android.content.Intent
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -60,7 +18,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,46 +27,39 @@ import com.example.drishtimukesh.Course
 import com.example.drishtimukesh.R
 import com.example.drishtimukesh.SubscriptionOption
 import com.example.drishtimukesh.getCourseById
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.math.roundToInt
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.LaunchedEffect
+
 fun getSubscriptionOptions(baseMonthlyPrice: Double, courseClass: String): List<SubscriptionOption> {
     val isHigherClass = courseClass == "Class_11" || courseClass == "Class_12"
 
     val options = if (isHigherClass) {
-        // Tier 2: Quarterly, Half-Yearly, Yearly
         listOf(
-            // Quarterly (3 months): 5% discount
             SubscriptionOption(
                 name = "Quarterly Plan",
                 durationInMonths = 3,
                 monthlyPrice = baseMonthlyPrice,
                 discountPercent = 5.0,
-                finalPrice = (baseMonthlyPrice * 3) * 0.95
+                finalPrice = (baseMonthlyPrice * 3)
             ),
-            // Half-Yearly (6 months): 7.5% discount (deduced as midpoint)
             SubscriptionOption(
                 name = "Half-Yearly Plan",
                 durationInMonths = 6,
                 monthlyPrice = baseMonthlyPrice,
                 discountPercent = 7.5,
-                finalPrice = (baseMonthlyPrice * 6) * 0.925
+                finalPrice = (baseMonthlyPrice * 6) -500
             ),
-            // Yearly (12 months): 10% discount (complete payment)
             SubscriptionOption(
                 name = "Yearly Plan",
                 durationInMonths = 12,
                 monthlyPrice = baseMonthlyPrice,
                 discountPercent = 10.0,
-                finalPrice = (baseMonthlyPrice * 12) * 0.90
+                finalPrice = (baseMonthlyPrice * 12) - 1000
             )
         )
     } else {
-        // Tier 1: Monthly, Quarterly, Yearly
         listOf(
-            // Monthly (1 month): 0% discount
             SubscriptionOption(
                 name = "Monthly Plan",
                 durationInMonths = 1,
@@ -117,21 +67,19 @@ fun getSubscriptionOptions(baseMonthlyPrice: Double, courseClass: String): List<
                 discountPercent = 0.0,
                 finalPrice = baseMonthlyPrice
             ),
-            // Quarterly (3 months): 5% discount
             SubscriptionOption(
-                name = "Quarterly Plan",
-                durationInMonths = 3,
+                name = "Half Yearly Plan",
+                durationInMonths = 6,
                 monthlyPrice = baseMonthlyPrice,
                 discountPercent = 5.0,
-                finalPrice = (baseMonthlyPrice * 3) * 0.95
+                finalPrice = (baseMonthlyPrice * 6) - (baseMonthlyPrice/2)
             ),
-            // Yearly (12 months): 10% discount (complete payment)
             SubscriptionOption(
                 name = "Yearly Plan",
                 durationInMonths = 12,
                 monthlyPrice = baseMonthlyPrice,
                 discountPercent = 10.0,
-                finalPrice = (baseMonthlyPrice * 12) * 0.90
+                finalPrice = (baseMonthlyPrice * 12) - (baseMonthlyPrice)
             )
         )
     }
@@ -146,13 +94,36 @@ fun PaymentScreen(courseId: String, navController: NavController) {
     var selectedOption by remember { mutableStateOf<SubscriptionOption?>(null) }
     var options by remember { mutableStateOf<List<SubscriptionOption>>(emptyList()) }
 
+    // --- NEW STATE ---
+    var userCoins by remember { mutableStateOf(0) }
+    var coinsApplied by remember { mutableStateOf(false) }
+    var discountedPrice by remember { mutableStateOf(0) }
+    var referralCode by remember { mutableStateOf("") }
+    var referralApplied by remember { mutableStateOf(false) }
+    var referralError by remember { mutableStateOf<String?>(null) }
+
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+
+    // --- Load Course & User Coins ---
     LaunchedEffect(courseId) {
         val fetchedCourse = getCourseById(courseId)
         course = fetchedCourse
         if (fetchedCourse != null) {
             options = getSubscriptionOptions(fetchedCourse.price.toDouble(), fetchedCourse.clas)
-            selectedOption = options.lastOrNull() // Default to the longest plan (best value)
+            selectedOption = options.lastOrNull()
+            discountedPrice = selectedOption?.finalPrice?.roundToInt() ?: 0
         }
+
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            db.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    val coins = doc.getLong("coins")?.toInt() ?: 0
+                    userCoins = coins
+                }
+        }
+
         isLoading = false
     }
 
@@ -166,88 +137,205 @@ fun PaymentScreen(courseId: String, navController: NavController) {
                     }
                 }
             )
-        },
-        bottomBar = {
-            PaymentBottomBar(selectedOption=selectedOption, course = course)
         }
     ) { paddingValues ->
-        if (isLoading) {
-            Box(Modifier
-                .fillMaxSize()
-                .padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text("Loading course details...")
+        when {
+            isLoading -> {
+                Box(
+                    Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) { Text("Loading course details...") }
             }
-        } else if (course == null) {
-            Box(Modifier
-                .fillMaxSize()
-                .padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text("Error: Course not found.")
+
+            course == null -> {
+                Box(
+                    Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) { Text("Error: Course not found.") }
             }
-        } else {
-            Box(            modifier = Modifier
-                .fillMaxSize()
-                // Apply scaffold padding here so the background covers the whole area inside the top/bottom bars
-                .padding(paddingValues)
-            ){
+
+            else -> {
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
-                        .background(Color(0xFFF0F0F0)) // Placeholder color if resource is missing
+                        .fillMaxSize()
+                        .padding(paddingValues)
                 ) {
-
-                    // --- USER: REPLACE THIS BLOCK WITH YOUR IMAGE COMPONENT ---
-                    // UNCOMMENT THIS SECTION AND ADD YOUR RESOURCE PAINTER
-
                     Image(
-                        // You need to import painterResource and use your actual resource ID
-                        // E.g., painter = painterResource(id = R.drawable.lightmode),
                         painter = painterResource(id = R.drawable.lightmode),
                         contentDescription = "Background",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
                     )
 
-                    // -----------------------------------------------------------
-
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFFFFFFF).copy(alpha = 0.15f), // Start with a very light, low-opacity white
-                                    Color(0xFFFFFFFF).copy(alpha = 0.05f)  // End with an almost transparent white
-                                ),
-                                start = Offset(0f, Float.POSITIVE_INFINITY),
-                                end = Offset(Float.POSITIVE_INFINITY, 0f)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .background(
+                                brush = Brush.linearGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.15f),
+                                        Color.White.copy(alpha = 0.05f)
+                                    ),
+                                    start = Offset(0f, Float.POSITIVE_INFINITY),
+                                    end = Offset(Float.POSITIVE_INFINITY, 0f)
+                                )
                             )
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Unlock ${course!!.name}",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Unlock ${course!!.name}",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
 
-                    Text(
-                        text = "Choose the best plan for ${course!!.clas}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 24.dp)
-                    )
-
-                    options.forEach { option ->
-                        SubscriptionCard(
-                            option = option,
-                            isSelected = option == selectedOption,
-                            onSelect = { selectedOption = it }
+                        Text(
+                            text = "Choose the best plan for ${course!!.clas}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(bottom = 24.dp)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+
+                        options.forEach { option ->
+                            SubscriptionCard(
+                                option = option,
+                                isSelected = option == selectedOption,
+                                onSelect = {
+                                    selectedOption = it
+                                    discountedPrice = it.finalPrice.roundToInt()
+                                    coinsApplied = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // --- COINS BLOCK ---
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Available Coins: $userCoins",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                    Button(
+                                        onClick = {
+                                            if (!coinsApplied && userCoins > 0 && selectedOption != null) {
+                                                discountedPrice =
+                                                    (selectedOption!!.finalPrice.roundToInt() - userCoins).coerceAtLeast(0)
+                                                coinsApplied = true
+                                            }
+                                        },
+                                        enabled = !coinsApplied && userCoins > 0,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856))
+                                    ) {
+                                        Text(if (coinsApplied) "Applied" else "Use Coins", color = Color.Black)
+                                    }
+                                }
+
+                                if (coinsApplied) {
+                                    Text(
+                                        text = "New Price: ₹$discountedPrice",
+                                        color = Color(0xFF2E7D32),
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // --- REFERRAL CODE FIELD ---
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = referralCode,
+                                onValueChange = { referralCode = it },
+                                label = { Text("Referral Code") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                placeholder = { Text("Enter friend's username") }
+                            )
+                            Button(
+                                onClick = {
+                                    referralError = null
+                                    if (referralCode.isNotEmpty()) {
+                                        db.collection("users")
+                                            .whereEqualTo("userName", referralCode.trim())
+                                            .get()
+                                            .addOnSuccessListener { docs ->
+                                                Log.d("ReferralCheck", "Docs found: ${docs.size()}")
+                                                if (!docs.isEmpty) {
+                                                    referralApplied = true
+                                                    referralError = null
+                                                } else {
+                                                    referralApplied = false
+                                                    referralError = "User not found"
+                                                }
+                                            }
+                                            .addOnFailureListener {
+                                                referralError = "Error checking referral"
+                                            }
+                                    } else {
+                                        referralError = "Please enter a referral code"
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856))
+                            ) {
+                                Text(if (referralApplied) "Applied" else "Apply", color = Color.Black)
+                            }
+                        }
+
+                        referralError?.let {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // --- PROCEED BUTTON ---
+                        val context = LocalContext.current
+                        Button(
+                            onClick = {
+                                if (course != null && selectedOption != null) {
+                                    val intent = Intent(context, PaymentActivity::class.java).apply {
+                                        putExtra("COURSE_ID", course!!.id)
+                                        putExtra("COURSE_NAME", course!!.name)
+                                        putExtra("COURSE_PRICE", course!!.price)
+                                        putExtra("PLAN_NAME", selectedOption!!.name)
+                                        putExtra("SUBSCRIPTION_MONTHS", selectedOption!!.durationInMonths)
+                                        putExtra("FINAL_PRICE", discountedPrice)
+                                        putExtra("REFERRAL_USERNAME", if (referralApplied) referralCode else "")
+                                        putExtra("COINS_USED", if (coinsApplied) userCoins else 0)
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856)),
+                            modifier = Modifier.fillMaxWidth().height(55.dp),
+                            enabled = selectedOption != null && course != null
+                        ) {
+                            Text("Proceed", fontWeight = FontWeight.Bold, color = Color.Black)
+                        }
+
+                        Spacer(modifier = Modifier.height(50.dp))
                     }
                 }
             }
@@ -267,23 +355,18 @@ fun SubscriptionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .border(
-                border = BorderStroke(2.dp, borderColor),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .border(BorderStroke(2.dp, borderColor), RoundedCornerShape(16.dp))
             .clickable { onSelect(option) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Plan Name & Checkbox
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = if (isSelected) Icons.Default.Check else Icons.Default.CheckCircle,
@@ -298,7 +381,6 @@ fun SubscriptionCard(
                     )
                 }
 
-                // Total Price
                 Text(
                     text = "₹${option.finalPrice.roundToInt()}",
                     style = MaterialTheme.typography.headlineSmall.copy(
@@ -310,12 +392,7 @@ fun SubscriptionCard(
 
             Divider(Modifier.padding(vertical = 8.dp), color = Color.LightGray.copy(alpha = 0.5f))
 
-            // Savings and Details
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Effective Monthly Price
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Effective Monthly", color = Color.Gray, fontSize = 12.sp)
                     Text(
@@ -324,12 +401,11 @@ fun SubscriptionCard(
                     )
                 }
 
-                // Discount/Savings
                 if (option.savingsPercent > 0) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text("You Save", color = Color.Gray, fontSize = 12.sp)
                         Text(
-                            "₹${option.totalDiscount.roundToInt()} (${option.savingsPercent}%)",
+                            "₹${option.totalDiscount.roundToInt()}",
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Green.copy(alpha = 0.8f)
                         )
@@ -338,83 +414,4 @@ fun SubscriptionCard(
             }
         }
     }
-}
-@Composable
-fun PaymentBottomBar(
-    selectedOption: SubscriptionOption?,
-    course: Course? // ✅ Pass the course here
-) {
-    val context = LocalContext.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        elevation = CardDefaults.cardElevation(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = selectedOption?.name ?: "Select a Plan",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "₹${selectedOption?.finalPrice?.roundToInt() ?: 0}",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
-                )
-            }
-
-            Button(
-                onClick = {
-                    if (course != null && selectedOption != null) {
-                        val intent = Intent(context, PaymentActivity::class.java).apply {
-                            putExtra("COURSE_ID", course.id)
-                            putExtra("COURSE_NAME", course.name)
-                            putExtra("COURSE_PRICE", course.price)
-                            putExtra("PLAN_NAME", selectedOption.name)
-                            putExtra("SUBSCRIPTION_MONTHS", selectedOption.durationInMonths)
-                            putExtra("FINAL_PRICE", selectedOption.finalPrice.roundToInt())
-
-                        }
-                        context.startActivity(intent)
-                    } else {
-                        Log.e("PaymentBottomBar", "Course or plan not selected")
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856)),
-                modifier = Modifier
-                    .width(180.dp)
-                    .height(50.dp),
-                enabled = selectedOption != null && course != null
-            ) {
-                Text(
-                    "Proceed",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
-        }
-    }
-}
-// --- PREVIEWS ---
-
-@Preview
-@Composable
-private fun CourseDetailScreenPreview() {
-    // Shows the Course Detail Screen with the "Enroll Now" button
-    CourseDetailScreen("100", rememberNavController())
-}
-@Preview
-@Composable
-private fun PaymentScreenPreview() {
-    // Shows the new Payment Screen for a CLASS_10 course
-    PaymentScreen("100", rememberNavController())
 }

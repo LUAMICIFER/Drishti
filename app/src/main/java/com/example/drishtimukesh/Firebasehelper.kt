@@ -532,8 +532,8 @@ suspend fun getAllToppersFromFirebase(): List<Topper> {
                     val subjectName = subjectData["subject_name"] as? String ?:
                     subjectData["subjectName"] as? String ?: ""
 
-                    val marksSecured = (subjectData["marka_secured"] as? Long)?.toInt() ?:
-                    (subjectData["marka_secured"] as? Double)?.toInt() ?:
+                    val marksSecured = (subjectData["marks_secured"] as? Long)?.toInt() ?:
+                    (subjectData["marks_secured"] as? Double)?.toInt() ?:
                     (subjectData["marks"] as? Long)?.toInt() ?: 0
 
                     if (subjectName.isNotEmpty()) {
@@ -554,6 +554,69 @@ suspend fun getAllToppersFromFirebase(): List<Topper> {
         toppers
     } catch (e: Exception) {
         Log.e("FirebaseHelper", "Error fetching toppers: ${e.message}")
+        emptyList()
+    }
+}
+
+
+
+suspend fun getUserEnrolledCourses(): List<Course> {
+    val db = Firebase.firestore
+    return try {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return emptyList()
+        Log.d("HomeScreen", "Fetching courses for user: $userId")
+
+        // 1. Get user document
+        val userDoc = db.collection("users").document(userId).get().await()
+        if (!userDoc.exists()) {
+            Log.d("HomeScreen", "User document doesn't exist")
+            return emptyList()
+        }
+
+        val userData = userDoc.data
+        Log.d("HomeScreen", "User data: $userData")
+
+        // Handle different possible field names for listOfCourses
+        val enrolledCourseIds = when {
+            userData?.get("listOfCourses") is List<*> -> {
+                (userData["listOfCourses"] as List<*>).filterIsInstance<String>()
+            }
+            userData?.get("courses") is List<*> -> {
+                (userData["courses"] as List<*>).filterIsInstance<String>()
+            }
+            else -> emptyList()
+        }
+
+        Log.d("HomeScreen", "Enrolled course IDs: $enrolledCourseIds")
+
+        if (enrolledCourseIds.isEmpty()) {
+            Log.d("HomeScreen", "No enrolled courses found")
+            return emptyList()
+        }
+
+        // 2. Fetch all courses in parallel
+        val courses = enrolledCourseIds.mapNotNull { courseId ->
+            try {
+                Log.d("HomeScreen", "Fetching course: $courseId")
+                val courseDoc = db.collection("courses").document(courseId).get().await()
+                if (courseDoc.exists()) {
+                    val course = courseDoc.toObject(Course::class.java)?.copy(id = courseDoc.id)
+                    Log.d("HomeScreen", "Found course: ${course?.name}")
+                    course
+                } else {
+                    Log.d("HomeScreen", "Course document doesn't exist: $courseId")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("HomeScreen", "Error fetching course $courseId: ${e.message}")
+                null
+            }
+        }
+
+        Log.d("HomeScreen", "Total courses found: ${courses.size}")
+        courses
+    } catch (e: Exception) {
+        Log.e("HomeScreen", "Error in getUserEnrolledCourses: ${e.message}")
         emptyList()
     }
 }
