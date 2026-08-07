@@ -8,6 +8,43 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:750496390361:android:37be7889cb08990359f2c8",
+        "android_client_info": {
+          "package_name": "com.doorknob.drishti"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "750496390361-adr2j8ulb88i0u591rii8b2esqgd133e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorknob.drishti",
+            "certificate_hash": "f8b8ae9c1f9b4572309262cbf2f30549792fea6f"
+          }
+        },
+        {
+          "client_id": "750496390361-5dmnki45c2ous8f90nhqbqe9gcp4vabj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBay3a6gKA_3OK5he0GcvbOwGETPaeCyQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "750496390361-5dmnki45c2ous8f90nhqbqe9gcp4vabj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:750496390361:android:1ef01f8516f9cac159f2c8",
         "android_client_info": {
           "package_name": "com.example.drishtiadmin"
@@ -73,6 +110,22 @@
           "android_info": {
             "package_name": "com.example.drishtimukesh",
             "certificate_hash": "f8b8ae9c1f9b4572309262cbf2f30549792fea6f"
+          }
+        },
+        {
+          "client_id": "750496390361-so0f718halljugr7feqhn7gb2g02gtoa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drishtimukesh",
+            "certificate_hash": "cf26394be912e0e13eac410ebb3bdcec90e7dabf"
+          }
+        },
+        {
+          "client_id": "750496390361-vdf5gpd9hk17i13pt9g8svqnpujd3fkm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drishtimukesh",
+            "certificate_hash": "906116e5ca0f9d59ccb712f802a529976e50c101"
           }
         },
         {

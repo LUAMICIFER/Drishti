@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.drishtimukesh"
+    namespace = "com.doorknob.drishti"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.drishtimukesh"
+        applicationId = "com.doorknob.drishti"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -81,8 +81,10 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")//online image
     implementation("androidx.media3:media3-exoplayer:1.3.1")// exoplayer
     implementation("androidx.media3:media3-ui:1.3.1")
-
+    implementation("androidx.media3:media3-exoplayer-hls:1.3.1")
     implementation("com.razorpay:checkout:1.6.40") //razor pay
     implementation ("androidx.appcompat:appcompat:1.6.1") // or a newer stable version
     implementation ("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.firebase:firebase-messaging-ktx") //push notification
+    implementation("com.google.firebase:firebase-messaging")
 }
