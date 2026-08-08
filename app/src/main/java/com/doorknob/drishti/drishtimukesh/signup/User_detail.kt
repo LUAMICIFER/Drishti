@@ -398,35 +398,82 @@ fun DetailPage(navController: NavController){
 
                     Button(
                         onClick = {
-                            loading = true
-                            val user = User(
-                                userName = username,
-                                name = name,
-                                email = email,
-                                phone = phone,
-                                userClass = selectedClass.name,
-                                password = password,
-                                coins = 0,
-                                listOfCourses = emptyList(),
-                                deviceId = getDeviceId(context)
-                            )
-                            createAccount(
-                                user,
-                                onSuccess = {
-                                    loading = false
-                                    Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show()
-                                    navController.navigate("home") {   // ✅ Navigate to Home
-                                        popUpTo("user_detail") { inclusive = true }
-                                    }
-                                },
-                                onFailure = {
-                                    loading = false
-                                    errorMessage = it.localizedMessage
+                            val trimmedPhone = phone.trim()
+                            when {
+                                username.isBlank() -> Toast.makeText(
+                                    context, "Please enter a username.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                availability != true -> Toast.makeText(
+                                    context,
+                                    "Please check username availability before continuing.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                name.isBlank() -> Toast.makeText(
+                                    context, "Please enter your name.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                email.isBlank() -> Toast.makeText(
+                                    context, "Please enter your email.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                trimmedPhone.length < 10 -> Toast.makeText(
+                                    context, "Please enter a valid 10-digit phone number.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                password.isBlank() -> Toast.makeText(
+                                    context, "Please enter a password.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                !(hasMinLength && hasUppercase && hasNumber && hasSpecialChar) -> Toast.makeText(
+                                    context, "Password does not meet all the requirements above.", Toast.LENGTH_LONG
+                                ).show()
+
+                                password != confirmPassword -> Toast.makeText(
+                                    context, "Password and Confirm Password must match.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                !accepted -> Toast.makeText(
+                                    context, "Please accept the Terms and Conditions.", Toast.LENGTH_SHORT
+                                ).show()
+
+                                else -> {
+                                    loading = true
+                                    val user = User(
+                                        userName = username,
+                                        name = name,
+                                        email = email,
+                                        phone = trimmedPhone,
+                                        userClass = selectedClass.name,
+                                        password = password,
+                                        coins = 0,
+                                        listOfCourses = emptyList(),
+                                        deviceId = getDeviceId(context)
+                                    )
+                                    createAccount(
+                                        user,
+                                        onSuccess = {
+                                            loading = false
+                                            Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show()
+                                            navController.navigate("home") {   // ✅ Navigate to Home
+                                                popUpTo("user_detail") { inclusive = true }
+                                            }
+                                        },
+                                        onFailure = {
+                                            loading = false
+                                            errorMessage = it.localizedMessage
+                                            Toast.makeText(
+                                                context,
+                                                it.localizedMessage ?: "Account creation failed.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    )
                                 }
-                            )
-//                            navController.navigate("home")
-                                  },
-                        enabled = isFormValid, // 👈 checkbox controls button state
+                            }
+                        },
+                        enabled = !loading, // Always clickable so we can show validation Toasts;
                         modifier = Modifier
                             .width(400.dp)
                             .height(50.dp)
@@ -463,7 +510,7 @@ fun DetailPage(navController: NavController){
                         ) {
                             Text(
                                 text = "Create an Account",
-                                color = if (accepted) Color(0xFFFFC856) else Color.Gray
+                                color = if (isFormValid) Color(0xFFFFC856) else Color.Gray
                             )
                         }
                     }

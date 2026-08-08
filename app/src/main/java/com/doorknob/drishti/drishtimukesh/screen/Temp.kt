@@ -1,6 +1,7 @@
 package com.doorknob.drishti.screen
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -140,6 +141,11 @@ class PaymentActivity : ComponentActivity(), PaymentResultWithDataListener, Exte
                     "Subscription activated successfully!",
                     Toast.LENGTH_LONG
                 ).show()
+
+                // ✅ Signal success back to the caller (DifferentPlans.kt) so it can
+                // navigate the user away from the plans/payment screen instead of
+                // leaving them stranded there after a successful purchase.
+                setResult(Activity.RESULT_OK, Intent().putExtra("COURSE_ID", courseId))
             } catch (e: Exception) {
                 Log.e(TAG, "Error in payment success flow", e)
                 Toast.makeText(
@@ -147,6 +153,9 @@ class PaymentActivity : ComponentActivity(), PaymentResultWithDataListener, Exte
                     "Payment successful but failed to activate subscription.",
                     Toast.LENGTH_LONG
                 ).show()
+                // Payment went through even though activation had an issue; still
+                // report success so the user isn't stuck on the payment screen.
+                setResult(Activity.RESULT_OK, Intent().putExtra("COURSE_ID", courseId))
             } finally {
                 finish()
             }

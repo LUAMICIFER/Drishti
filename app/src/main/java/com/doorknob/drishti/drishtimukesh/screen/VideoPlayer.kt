@@ -22,8 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,12 +63,21 @@ fun VideoPlayerScreen(videoUrl: String, navController: NavController) {
     // NEW STATE: Explicitly track if an unrecoverable error has occurred
     var isError by remember { mutableStateOf(false) }
 
+    // Persists across recomposition AND (via the Bundle) process death / config
+    // change, so if the ExoPlayer instance ever does get recreated (e.g. the
+    // hosting Activity is torn down under memory pressure) we can resume from
+    // where the user left off instead of restarting at 0.
+    var savedPosition by rememberSaveable { mutableLongStateOf(0L) }
+
     // 1. Initialize ExoPlayer instance
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
             setMediaItem(mediaItem)
             prepare()
+            if (savedPosition > 0) {
+                seekTo(savedPosition)
+            }
             playWhenReady = true
 
             // Attach a listener to update the player state and detect errors
@@ -87,7 +98,10 @@ fun VideoPlayerScreen(videoUrl: String, navController: NavController) {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> exoPlayer.pause()
+                Lifecycle.Event.ON_PAUSE -> {
+                    savedPosition = exoPlayer.currentPosition
+                    exoPlayer.pause()
+                }
                 Lifecycle.Event.ON_RESUME -> exoPlayer.play()
                 else -> {}
             }
@@ -96,6 +110,7 @@ fun VideoPlayerScreen(videoUrl: String, navController: NavController) {
 
         // Release the player when the composable leaves the screen
         onDispose {
+            savedPosition = exoPlayer.currentPosition
             lifecycleOwner.lifecycle.removeObserver(observer)
             exoPlayer.release()
         }

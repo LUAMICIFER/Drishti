@@ -1,7 +1,10 @@
 package com.doorknob.drishti.screen
 
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,6 +107,19 @@ fun PaymentScreen(courseId: String, navController: NavController) {
 
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
+
+    // Launch PaymentActivity and react to a successful purchase by returning
+    // the user to the dashboard instead of leaving them stuck on this screen.
+    val paymentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            navController.navigate("home_main") {
+                popUpTo("home_main") { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    }
 
     // --- Load Course & User Coins ---
     LaunchedEffect(courseId) {
@@ -325,7 +341,7 @@ fun PaymentScreen(courseId: String, navController: NavController) {
                                         putExtra("REFERRAL_USERNAME", if (referralApplied) referralCode else "")
                                         putExtra("COINS_USED", if (coinsApplied) userCoins else 0)
                                     }
-                                    context.startActivity(intent)
+                                    paymentLauncher.launch(intent)
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC856)),

@@ -50,6 +50,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.doorknob.drishti.Course
 import com.doorknob.drishti.getAllCourses
 import com.doorknob.drishti.getCoursesByClass
+import com.doorknob.drishti.getUserEnrolledCourses
 import com.doorknob.drishti.R
 import kotlinx.coroutines.launch
 
@@ -76,6 +77,13 @@ fun CoursesScreen(navController: NavHostController) {
 
     // State to manage loading status
     var isLoading by remember { mutableStateOf(false) }
+
+    // IDs of courses the current user is already enrolled in, so we can show
+    // "Continue Learning" instead of "Enroll Now" for those (issue #13).
+    var enrolledCourseIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    LaunchedEffect(Unit) {
+        enrolledCourseIds = getUserEnrolledCourses().map { it.id }.toSet()
+    }
 
     // Coroutine scope to launch suspend functions (like Firebase calls)
     val coroutineScope = rememberCoroutineScope()
@@ -172,7 +180,7 @@ fun CoursesScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 2. Content Display (Loading, Empty, or List)
-                CourseContent(isLoading, filteredCourses, selectedClass, navController)
+                CourseContent(isLoading, filteredCourses, selectedClass, navController, enrolledCourseIds)
 
             }
 
@@ -183,7 +191,7 @@ fun CoursesScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun CourseItem(course: Course, onEnrollClick:() -> Unit) { // <-- Added onEnrollClick
+private fun CourseItem(course: Course, isEnrolled: Boolean, onEnrollClick:() -> Unit) { // <-- Added onEnrollClick
     // Helper variables to map course data to the card structure
     val imageUrl = course.baseImage[0]
     val title = course.name
@@ -256,16 +264,19 @@ private fun CourseItem(course: Course, onEnrollClick:() -> Unit) { // <-- Added 
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 5. Enroll Button
+                // 5. Enroll / Continue Button
                 Button(
                     onClick = onEnrollClick,
-                    // Using Material Theme primary color is usually better practice,
-                    // but keeping your specified red for consistency with your request
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isEnrolled) Color(0xFF2E7D32) else Color(0xFFE53935)
+                    ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.height(36.dp)
                 ) {
-                    Text("Enroll Now", style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        if (isEnrolled) "Continue Learning" else "Enroll Now",
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
@@ -308,7 +319,8 @@ private fun FilterButtonsRow(
 private fun CourseContent(
     isLoading: Boolean,
     courses: List<Course>,
-    selectedClass: String, navController: NavController
+    selectedClass: String, navController: NavController,
+    enrolledCourseIds: Set<String> = emptySet()
 ) {
     val selectedClassText = if (selectedClass == "all") "All Classes" else selectedClass.replace("_", " ")
 
@@ -336,9 +348,13 @@ private fun CourseContent(
             contentPadding = PaddingValues(horizontal = 8.dp)
         ) {
             items(courses, key = { it.id }) { course ->
-                CourseItem(course = course, onEnrollClick = {
-                    navController.navigate("CourseDescriptionScreen/${course.id}")
-                })
+                CourseItem(
+                    course = course,
+                    isEnrolled = enrolledCourseIds.contains(course.id),
+                    onEnrollClick = {
+                        navController.navigate("CourseDescriptionScreen/${course.id}")
+                    }
+                )
 
             }
         }

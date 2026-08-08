@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -146,6 +148,13 @@ fun HomeScreen(navController: NavHostController) {
         ) {
             TopBar(navController)
             Spacer(Modifier.height(18.dp))
+
+            // Load the course list used by the search bar's filter predicate.
+            // Without this, `courses` stays empty forever and the search bar
+            // appears to do nothing no matter what the user types.
+            LaunchedEffect(Unit) {
+                loadCourses(selectedClass)
+            }
 
             SearchBarWithFilter(
                 modifier = Modifier,
@@ -566,52 +575,44 @@ fun StartExcellingSection() {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(Modifier.fillMaxWidth()){
-            Column(
-//                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Ready to start \nexcelling in school exams?",
-                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 20.sp, lineHeight = 24.sp)
-                )
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "Ready to start \nexcelling in school exams?",
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 20.sp, lineHeight = 24.sp)
+            )
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Join our courses & start learning early\nwith Drishti Classroom Programme",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp)
-                )
+            Text(
+                text = "Join our courses & start learning early\nwith Drishti Classroom Programme",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp)
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Explore Our Exclusively\nFree Content Now!",
-                    style = MaterialTheme.typography.labelSmall
-                )
+            Text(
+                text = "Explore Our Exclusively\nFree Content Now!",
+                style = MaterialTheme.typography.labelSmall
+            )
 
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                WatchFreeButton()
-            }
-
-//            Spacer(modifier = Modifier.width(16.dp))
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
-                Spacer(modifier = Modifier.height(65.dp))
-
-                Image(
-                    painter = painterResource(id = R.drawable.bookmedalf), // replace with your books image
-                    contentDescription = "Books Image",
-                    modifier = Modifier
-                        .size(185.dp)
-//                        .clip(RoundedCornerShape(8.dp))
-                )
-            }
+            WatchFreeButton()
         }
 
-
+        Image(
+            painter = painterResource(id = R.drawable.bookmedalf), // replace with your books image
+            contentDescription = "Books Image",
+            modifier = Modifier
+                .padding(top = 65.dp)
+                .size(120.dp)
+        )
     }
 }
 
@@ -758,7 +759,7 @@ fun EnrolledCoursesPager(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp), // Adjusted height for course cards
-            contentPadding = PaddingValues(horizontal = 40.dp) // Add padding for peek effect
+            contentPadding = PaddingValues(horizontal = 24.dp) // Add padding for peek effect
         ) { page ->
             val course = courses[page]
             EnrolledCourseCard(
@@ -821,7 +822,8 @@ fun EnrolledCourseCard(
                 model = course.baseImage.getOrNull(0) ?: "",
                 contentDescription = "Course Image",
                 modifier = Modifier
-                    .size(100.dp)
+                    .weight(0.35f)
+                    .aspectRatio(1f)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.lightmode) // Add a placeholder drawable
@@ -857,8 +859,7 @@ fun EnrolledCourseCard(
                 Button(
                     onClick = onEnrollClick,
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .width(150.dp)
+                        .fillMaxWidth()
                         .height(50.dp)
                         .background(
                             brush = Brush.horizontalGradient(
@@ -960,9 +961,13 @@ fun CourseFilterBottomSheet(
     if (!show) return
 
     var tempSelected by remember { mutableStateOf(selectedClass) }
+    // Only allow fully expanded or hidden states so the sheet can't be left
+    // half-dragged with the Apply button hidden behind the nav/gesture bar.
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = Color(0xFFFDFBFF),
         tonalElevation = 8.dp,
         dragHandle = {}
@@ -970,7 +975,7 @@ fun CourseFilterBottomSheet(
         Column(
             Modifier
                 .fillMaxWidth()
-//                .padding(20.dp)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
                 .navigationBarsPadding()
         ) {
 

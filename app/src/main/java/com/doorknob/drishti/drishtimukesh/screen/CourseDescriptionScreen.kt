@@ -367,9 +367,10 @@ fun CourseCurriculum(courseId: String, subjects: List<Subject>, navController: N
 fun SubjectItem(courseId: String, subject: Subject, navController: NavController, isSubscribed: Boolean) {
     var isExpanded by remember { mutableStateOf(false) }
     var chapters by remember { mutableStateOf<List<Chapter>>(emptyList()) }
+    val context = LocalContext.current
 
-    LaunchedEffect(isExpanded) {
-        if (isExpanded) {
+    LaunchedEffect(isExpanded, isSubscribed) {
+        if (isExpanded && isSubscribed) {
             chapters = getChaptersBySubjectId(courseId, subject.id)
         }
     }
@@ -377,23 +378,45 @@ fun SubjectItem(courseId: String, subject: Subject, navController: NavController
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { isExpanded = !isExpanded },
+            .clickable(enabled = isSubscribed) {
+                if (isSubscribed) {
+                    isExpanded = !isExpanded
+                } else {
+                    Toast.makeText(context, "Enroll in this course to view the curriculum", Toast.LENGTH_SHORT).show()
+                }
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(subject.name, style = MaterialTheme.typography.titleMedium)
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = null
+            Text(
+                subject.name,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.width(8.dp))
+            if (!isSubscribed) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Locked - enroll to unlock",
+                    tint = Color.Gray
+                )
+            } else {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null
+                )
+            }
         }
     }
 
-    AnimatedVisibility(visible = isExpanded) {
+    AnimatedVisibility(visible = isExpanded && isSubscribed) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             chapters.forEach { chapter ->
                 ChapterItem(courseId = courseId, subjectId = subject.id, chapter = chapter, navController = navController, isSubscribed = isSubscribed)
@@ -406,9 +429,10 @@ fun SubjectItem(courseId: String, subject: Subject, navController: NavController
 fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter, navController: NavController, isSubscribed: Boolean) {
     var isExpanded by remember { mutableStateOf(false) }
     var lectures by remember { mutableStateOf<List<Lecture>>(emptyList()) }
+    val context = LocalContext.current
 
-    LaunchedEffect(isExpanded) {
-        if (isExpanded) {
+    LaunchedEffect(isExpanded, isSubscribed) {
+        if (isExpanded && isSubscribed) {
             lectures = getLecturesByChapterId(courseId, subjectId, chapter.id)
         }
     }
@@ -416,24 +440,45 @@ fun ChapterItem(courseId: String, subjectId: String, chapter: Chapter, navContro
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { isExpanded = !isExpanded }
+            .clickable(enabled = isSubscribed) {
+                if (isSubscribed) {
+                    isExpanded = !isExpanded
+                } else {
+                    Toast.makeText(context, "Enroll in this course to view the curriculum", Toast.LENGTH_SHORT).show()
+                }
+            }
             .padding(top = 8.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(chapter.name)
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = null
+            Text(
+                chapter.name,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.width(8.dp))
+            if (!isSubscribed) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Locked - enroll to unlock",
+                    tint = Color.Gray
+                )
+            } else {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null
+                )
+            }
         }
     }
 
-    AnimatedVisibility(visible = isExpanded) {
+    AnimatedVisibility(visible = isExpanded && isSubscribed) {
         Column(modifier = Modifier.padding(start = 16.dp)) {
             lectures.forEach { lecture ->
                 LectureItem(lecture, navController, isSubscribed)

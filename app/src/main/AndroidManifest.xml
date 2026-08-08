@@ -15,14 +15,17 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.DrishtiMukesh"
-        android:configChanges="orientation|screenSize|keyboardHidden"
         tools:targetApi="31">
 
         <!-- ✅ MAIN ACTIVITY (LAUNCHER) -->
+        <!-- configChanges here (not on <application>, which is a no-op) so that
+             rotating the device while a video is playing does not destroy and
+             recreate the Activity/ExoPlayer instance and reset playback. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.DrishtiMukesh">
 
             <intent-filter>

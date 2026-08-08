@@ -245,7 +245,7 @@ fun ReferralCodeSection(username: String) {
                 color = Color(0xFFB45309) // yellow-700
             )
             Text(
-                text = "Give your friends your unique username. When they sign up and use it, you both win!",
+                text = "Share your code with friends. When they enter it while purchasing a course, you both get rewarded with coins — the code is applied at checkout, not here.",
                 color = Color(0xFF4B5563), // gray-600
                 modifier = Modifier.padding(vertical = 8.dp)
             )

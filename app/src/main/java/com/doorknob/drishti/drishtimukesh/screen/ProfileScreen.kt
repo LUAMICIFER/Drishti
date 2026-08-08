@@ -1149,31 +1149,40 @@ fun DeveloperSection() {
         )
     )
 
+    // Subtle footer-style credit instead of a loud headline block.
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.linearGradient(
-                    listOf(Color(0xFF3B2C35), Color(0xFF5C3D6B))
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(20.dp),
+            .padding(top = 8.dp, bottom = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Developed By", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            "Developed by",
+            color = Color.Gray,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.height(4.dp))
 
-        devs.forEach { dev ->
-            DeveloperCard(dev, context)
-            Spacer(modifier = Modifier.height(12.dp))
-        }
+        Text(
+            text = devs.joinToString("  •  ") { it.name },
+            color = Color.Gray,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .clickable {
+                    // Open the first developer's link as a lightweight credit action.
+                    devs.firstOrNull()?.let {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.link)))
+                    }
+                }
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             "© 2025 Drishti Institute",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp,
+            color = Color.LightGray,
+            fontSize = 10.sp,
             textAlign = TextAlign.Center
         )
     }
@@ -1184,38 +1193,6 @@ data class Developer(
     val role: String,
     val link: String
 )
-
-@Composable
-fun DeveloperCard(dev: Developer, context: Context) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(dev.link))
-                context.startActivity(intent)
-            },
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Developer",
-                tint = Color(0xFFFFC856),
-                modifier = Modifier.size(40.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(dev.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(dev.role, color = Color(0xFFFFC856), fontSize = 13.sp)
-            }
-        }
-    }
-}
 
 // -----------------------------
 // PROFILE CONTENT
