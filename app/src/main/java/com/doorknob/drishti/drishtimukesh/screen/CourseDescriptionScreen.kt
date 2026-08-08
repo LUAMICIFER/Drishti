@@ -482,7 +482,7 @@ fun LectureItem(lecture: Lecture, navController: NavController, isSubscribed: Bo
 
                 IconButton(onClick = {
                     val encodedUrl = URLEncoder.encode(lecture.videoUrl, StandardCharsets.UTF_8.toString())
-                    navController.navigate("VideoPlayerScreen/$encodedUrl")
+                    navController.navigate("videoPlayerScreen/$encodedUrl")
                 }) {
                     Icon(Icons.Default.PlayArrow, contentDescription = "Play Video", tint = MaterialTheme.colorScheme.primary)
                 }
